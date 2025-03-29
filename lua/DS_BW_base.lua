@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.0"
-	DS_BW.version_num = 1.0
+	DS_BW.version = "1.0.1"
+	DS_BW.version_num = 1.01
 	DS_BW.settings = {
 		-- info msg
 		skills_showcase = 2,
@@ -210,7 +210,7 @@ if not DS_BW then
 	end
 	
 	function DS_BW:linkchangelog()
-		managers.network.account:overlay_activate("url", "https://github.com/irbizzelus/Death-Wish-Plus/releases")
+		managers.network.account:overlay_activate("url", "https://github.com/irbizzelus/PD2_DS_BW/releases")
 	end
 	
 	-- only pops up once in the main menu
@@ -220,7 +220,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = "1.0 release\n\n -Welcome\n -Bug-fix #3"
+				local message = "1.0.1 release\n\nWelcome to release."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
