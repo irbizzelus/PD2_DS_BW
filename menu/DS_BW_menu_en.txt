@@ -1,0 +1,36 @@
+{
+	"DS_BW_title": "Death Sentence, but Worse",
+	"DS_BW_blank": "",
+	
+	"DS_BW_player_info_header": "---- PEER SETTINGS ----",
+	"DS_BW_player_info_desc": "Everything related to other players in your lobby. NOTE: if you are running 'Death Wish +' mod, settings from that mod will take priority.",
+	"DS_BW_skills_showcase": "Skills showcase",
+	"DS_BW_skills_showcase_desc": "Print in chat perk deck, perk deck completion, and skill points info for each player in your session. Skill points can either be summed up, or distributed across trees/sub-trees. Only you can see these messages. Works both as client and host.",
+	"DS_BW_skills_showcase_1": "Disabled",
+	"DS_BW_skills_showcase_2": "All skill points",
+	"DS_BW_skills_showcase_3": "Points per tree",
+	"DS_BW_skills_showcase_4": "Points per sub-tree",
+	"DS_BW_hourinfo": "Player playtime",
+	"DS_BW_hourinfo_desc": "Print in chat player's PAYDAY 2 playtime if possible. Only you can see these messages. Works both as client and host.",
+	"DS_BW_infamy": "Add player infamy",
+	"DS_BW_infamy_desc": "Player playtime chat message will include player's infamy level. Does not work if player playtime is disabled."
+	
+	"DS_BW_endstat_header": "---- GAME COMPLETION SCOREBOARD ----",
+	"DS_BW_endstat_header_desc": "Settings for the scoreboard that appears after heist is completed. (Available only if you are the host) NOTE: if you are running 'Death Wish +' mod, settings from that mod will take priority.",
+	"DS_BW_endstattoggle": "Enable scoreboard",
+	"DS_BW_endstattoggle_desc": "Kill/death ratio of all players will be printed in chat after heist is completed. (Available only if you are the host)",
+	"DS_BW_statsmsgpublic": "Public scoreboard",
+	"DS_BW_statsmsgpublic_desc": "Scoreboard will be printed as a public message for all players in the lobby to see",
+	"DS_BW_endstatSPkills": "Specials killcount",
+	"DS_BW_endstatSPkills_desc": "Adds player's special kill count to the scoreboard.",
+	"DS_BW_endstatheadshots": "Headshot killcount",
+	"DS_BW_endstatheadshots_desc": "Adds player's headshot kill count to the scoreboard.",
+	"DS_BW_endstataccuarcy": "Accuracy stat",
+	"DS_BW_endstataccuarcy_desc": "Adds player's accuracy stat to the scoreboard."
+	
+	"DS_BW_misc_header": "---- MISCELLANEOUS OPTIONS ----",
+	"DS_BW_enablelobbyname": "Enable custom lobby name",
+	"DS_BW_lobbyname_desc": "Automatically renames your lobby to 'Death Sentence, but Worse' if you are playing a contract on Death Sentence diffiuclty. This would let players on Crime.net screen know that you are running this mod.\nShould only(!!!) be disabled if you run other lobby name changing mods.",
+	"DS_BW_patch_notes": "Patch notes",
+	"DS_BW_patch_notes_desc": "Click this button to open DSBW patch notes in the overlay browser.",
+}
