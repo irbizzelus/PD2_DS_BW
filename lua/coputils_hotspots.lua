@@ -42,7 +42,7 @@ if not DS_BW.HotspotLogic then
 	local hotspot_engine_start = 0
 	function DS_BW.HotSpotLogic:MaintainHotSpotUpdates()
 		
-		if Network and not Network:is_client() and DS_BW.DS_difficultycheck and Utils:IsInGameState() then
+		if Network and Network:is_server() and DS_BW.DS_difficultycheck and Utils:IsInGameState() then
 			-- updater itself
 			self:UpdateHotSpotList()
 		else
@@ -54,7 +54,7 @@ if not DS_BW.HotspotLogic then
 			end
 		end
 		
-		DelayedCalls:Add("DSBW_hotspot_updater_maintaince", DS_BW.HotSpotLogic._updates_delay, function()
+		DelayedCalls:Add("DS_BW_hotspot_updater_maintaince", DS_BW.HotSpotLogic._updates_delay, function()
 			DS_BW.HotSpotLogic.MaintainHotSpotUpdates(DS_BW.HotSpotLogic)
 		end)
 		
@@ -391,7 +391,7 @@ if not DS_BW.HotspotLogic then
 				if not table.contains(ignored_interacts, int_str) then
 					log("[DS_BW] Unknown hotspot interaction: '"..interaction.."'")
 				end
-				-----------------
+				----------------- debug
 				return 0
 			end
 		end
@@ -444,7 +444,7 @@ if not DS_BW.HotspotLogic then
 	function DS_BW.HotSpotLogic:CreateDefensivePositions(coords)
 		
 		if not coords then
-			log("[DW_BW] Critical error warning: hotspot defensive positions were not established, because hotspot coordinates are missing.")
+			log("[DS_BW] Critical error warning: hotspot defensive positions were not established, because hotspot coordinates are missing.")
 			return
 		end
 		
@@ -660,7 +660,7 @@ if not DS_BW.HotspotLogic then
 					if self:AreUnitsEnemies(player_unit, enemy) then
 						local enemy_chartweak = enemy:base():char_tweak()
 						-- avoid snipers from ditching their sniper spots (ngl if was pretty funny tho), and some other units from attacking hotspots
-						if enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DSBW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DSBW_tag_miniboss") then
+						if enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
 							-- make sure cop doesnt belong to another hotspot already
 							if enemies_to_assign > 0 and not self.HotSpotAssignedUnits[tostring(enemy:id())] and enemy:brain():is_available_for_assignment(objective) then
 								enemies_to_assign = enemies_to_assign - 1

@@ -22,15 +22,11 @@ local access_type_all = {
 }
 
 -- units themselves
-Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BWtweak_initunitcategories", function(self, difficulty_index)
+Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BW_tweak_initunitcategories", function(self, difficulty_index)
 	if difficulty_index == 8 then
 		DS_BW.DS_difficultycheck = true
 		DS_BW.update_surrender_tweak_data()
-		-- snapshot of our settings that are used for the current game
-		if not DS_BW.settings_config then
-			DS_BW.settings_config = clone(DS_BW.settings)
-		end
-		
+
 		self.unit_categories.Blue_swat = {
 			unit_types = {
 				america = {
@@ -320,28 +316,6 @@ Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BWtweak_initunitca
 			},
 			access = access_type_all
 		}
-		
-		-- winter's shield but without winter's properties
-		self.unit_categories.FBI_reinf_shield = {
-			unit_types = {
-				america = {
-					Idstring("units/pd2_dlc_vip/characters/ene_phalanx_1/ene_phalanx_1")
-				},
-				russia = {
-					Idstring("units/pd2_dlc_vip/characters/ene_phalanx_1/ene_phalanx_1")
-				},
-				zombie = {
-					Idstring("units/pd2_dlc_vip/characters/ene_phalanx_1/ene_phalanx_1")
-				},
-				murkywater = {
-					Idstring("units/pd2_dlc_vip/characters/ene_phalanx_1/ene_phalanx_1")
-				},
-				federales = {
-					Idstring("units/pd2_dlc_vip/characters/ene_phalanx_1/ene_phalanx_1")
-				}
-			},
-			access = access_type_all
-		}
 
 		-- Change dozer types
 		self.unit_categories.FBI_tank = {
@@ -375,6 +349,7 @@ Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BWtweak_initunitca
 			},
 			access = access_type_all
 		}
+		
 		self.unit_categories.FBI_tank_annoying = {
 			special_type = "tank",
 			unit_types = {
@@ -414,45 +389,13 @@ Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BWtweak_initunitca
 			}
 		end
 		
-		self.unit_categories.UnDeadHostageAvengers = {
-			special_type = "tank",
-			unit_types = {
-				america = {
-					Idstring("units/pd2_dlc_help/characters/ene_zeal_bulldozer_halloween/ene_zeal_bulldozer_halloween")
-				},
-				russia = {
-					Idstring("units/pd2_dlc_help/characters/ene_zeal_bulldozer_halloween/ene_zeal_bulldozer_halloween")
-				},
-				zombie = {
-					Idstring("units/pd2_dlc_help/characters/ene_zeal_bulldozer_halloween/ene_zeal_bulldozer_halloween")
-				},
-				murkywater = {
-					Idstring("units/pd2_dlc_help/characters/ene_zeal_bulldozer_halloween/ene_zeal_bulldozer_halloween")
-				},
-				federales = {
-					Idstring("units/pd2_dlc_help/characters/ene_zeal_bulldozer_halloween/ene_zeal_bulldozer_halloween")
-				}
-			},
-			access = access_type_all
+		self.special_unit_spawn_limits = {
+			shield = 5,
+			medic = 3,
+			taser = 3,
+			tank = 2,
+			spooc = 3
 		}
-		
-		if Global.level_data and Global.level_data.level_id == "mad" then
-			self.special_unit_spawn_limits = {
-				shield = 3,
-				medic = 2,
-				taser = 2,
-				tank = 1,
-				spooc = 2
-			}
-		else
-			self.special_unit_spawn_limits = {
-				shield = 5,
-				medic = 3,
-				taser = 3,
-				tank = 2,
-				spooc = 3
-			}
-		end
 	
 	else
 		DS_BW.DS_difficultycheck = false
@@ -462,758 +405,723 @@ end)
 -- SPAWNGROUPS
 Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupstweak", function(self, difficulty_index)
 	if difficulty_index == 8 then
-	-- Change spawn groups to our own
-	self.enemy_spawn_groups = {}
-	
-	-- Tactics
-	self._tactics = {
-		Phalanx_minion = {
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield",
-			"deathguard"
-		},
-		Phalanx_vip = {
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield",
-			"deathguard"
-		},
-		CS_cop = {
-			"provide_coverfire",
-			"provide_support",
-			"ranged_fire"
-		},
-		CS_cop_stealth = {
-			"flank",
-			"provide_coverfire",
-			"provide_support"
-		},
-		CS_swat_rifle = {
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"ranged_fire",
-			"deathguard"
-		},
-		CS_swat_shotgun = {
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield_cover"
-		},
-		CS_swat_heavy = {
-			"smoke_grenade",
-			"charge",
-			"flash_grenade",
-			"provide_coverfire",
-			"provide_support"
-		},
-		CS_shield = {
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield",
-			"deathguard"
-		},
-		CS_swat_rifle_flank = {
-			"flank",
-			"flash_grenade",
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support"
-		},
-		CS_swat_shotgun_flank = {
-			"flank",
-			"flash_grenade",
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support"
-		},
-		CS_swat_heavy_flank = {
-			"flank",
-			"flash_grenade",
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield_cover"
-		},
-		CS_shield_flank = {
-			"flank",
-			"charge",
-			"flash_grenade",
-			"provide_coverfire",
-			"provide_support",
-			"shield"
-		},
-		CS_tazer = {
-			"flank",
-			"charge",
-			"flash_grenade",
-			"shield_cover",
-			"murder"
-		},
-		CS_sniper = {
-			"ranged_fire",
-			"provide_coverfire",
-			"provide_support"
-		},
-		FBI_suit = {
-			"flank",
-			"ranged_fire",
-			"flash_grenade"
-		},
-		FBI_suit_stealth = {
-			"provide_coverfire",
-			"provide_support",
-			"flash_grenade",
-			"flank"
-		},
-		FBI_swat_rifle = {
-			"smoke_grenade",
-			"flash_grenade",
-			"provide_coverfire",
-			"charge",
-			"provide_support",
-			"ranged_fire"
-		},
-		FBI_swat_shotgun = {
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support"
-		},
-		FBI_heavy = {
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield_cover",
-			"deathguard"
-		},
-		FBI_shield = {
-			"smoke_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield",
-			"deathguard"
-		},
-		FBI_swat_rifle_flank = {
-			"flank",
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support"
-		},
-		FBI_swat_shotgun_flank = {
-			"flank",
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support"
-		},
-		FBI_heavy_flank = {
-			"flank",
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield_cover"
-		},
-		FBI_shield_flank = {
-			"flank",
-			"smoke_grenade",
-			"flash_grenade",
-			"charge",
-			"provide_coverfire",
-			"provide_support",
-			"shield"
-		},
-		FBI_tank = {
-			"charge",
-			"deathguard",
-			"shield_cover",
-			"smoke_grenade"
-		},
-		spooc = {
-			"charge",
-			"shield_cover",
-			"smoke_grenade",
-			"flash_grenade"
-		},
-		marshal_marksman = {
-			"ranged_fire",
-			"flank"
-		},
-		-- tactics for snowman specifically
-		tank_rush = {
-			"charge",
-			"murder"
-		},
-	}
-	
-	-- lol
-	self.enemy_spawn_groups.piggydozer = {
-		amount = {
-			1,
-			1
-		},
-		spawn = {
-			{
-				freq = 1,
-				amount_min = 1,
-				rank = 1,
-				unit = "piggydozer",
-				tactics = self._tactics.tank_rush
-			}
-		},
-		spawn_point_chk_ref = table.list_to_set({
-			"tac_bull_rush"
-		})
-	}
-	
-	-- IMPORTANT NOTE: certain squads had their custom names replaced for vanilla squad names
-	-- because some heists use scripted spawns for certain squads at certain points, at certain areas
-	-- most noticable examples: brooklyn bank - top floor office area, and whole 2nd floor on tihuana breakfast.
-	-- these areas only use scripted spawns, that search for a squad with a specific name
-	-- and never spawn cops through standard spawn logic (at least i think thats whats happening).
-	-- this was the reason why only cloakers spawned in these areas in DW+ - because their squad name was never updated
-	
-	self.enemy_spawn_groups.Squad_Blue_Swat = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "Blue_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Green_Swat = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "Green_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Grey_Swat = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "Grey_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Blue_Shield = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "CS_shield",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_shield,
-				rank = 1
+		-- Change spawn groups to our own
+		self.enemy_spawn_groups = {}
+		
+		-- Tactics
+		self._tactics = {
+			Phalanx_minion = {
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield",
+				"deathguard"
 			},
-			{
-				unit = "Blue_swat",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Green_Shield = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "Green_shield",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_shield,
-				rank = 1
+			Phalanx_vip = {
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield",
+				"deathguard"
 			},
-			{
-				unit = "Green_swat",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Grey_Shield = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "Grey_shield",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_shield,
-				rank = 1
+			CS_cop = {
+				"provide_coverfire",
+				"provide_support",
+				"ranged_fire"
 			},
-			{
-				unit = "Grey_swat",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Blue_Green_Tazer = {
-		amount = {1, 3},
-		spawn = {
-			{
-				unit = "Default_tazer",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_tazer,
-				rank = 1
+			CS_cop_stealth = {
+				"flank",
+				"provide_coverfire",
+				"provide_support"
 			},
-			{
-				unit = "Blue_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+			CS_swat_rifle = {
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"ranged_fire",
+				"deathguard"
 			},
-			{
-				unit = "Green_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Blue_Green_spooc = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "Default_spooc",
-				freq = 1,
-				amount_max = 1,
-				tactics = self._tactics.spooc,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Blue_Green_Tank = {
-		amount = {1, 2},
-		spawn = {
-			{
-				unit = "Blue_green_tank",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 1,
-				tactics = self._tactics.FBI_tank,
-				rank = 1
+			CS_swat_shotgun = {
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield_cover"
 			},
-			{
-				unit = "Blue_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+			CS_swat_heavy = {
+				"smoke_grenade",
+				"charge",
+				"flash_grenade",
+				"provide_coverfire",
+				"provide_support"
 			},
-			{
-				unit = "Green_swat",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Grey_Tank = {
-		amount = {1, 2},
-		spawn = {
-			{
-				unit = "Grey_tank",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 1,
-				tactics = self._tactics.FBI_tank,
-				rank = 1
+			CS_shield = {
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield",
+				"deathguard"
 			},
-			{
-				unit = "Grey_swat",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 4,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	-- Squad_Heavy_1
-	self.enemy_spawn_groups.tac_swat_rifle_flank = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Heavy_2 = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Heavy_3 = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Light_1 = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Light_2 = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
-			}
-		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Light_3 = {
-		amount = {3, 4},
-		spawn = {
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
-			}
-		}
-	}
-	
-	-- Squad_Medic
-	self.enemy_spawn_groups.tac_tazer_flanking = {
-		amount = {2, 3},
-		spawn = {
-			{
-				unit = "medic_M4",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 1,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+			CS_swat_rifle_flank = {
+				"flank",
+				"flash_grenade",
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support"
 			},
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
+			CS_swat_shotgun_flank = {
+				"flank",
+				"flash_grenade",
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support"
 			},
-			{
-				unit = "medic_R870",
-				freq = 0.5,
-				amount_min = 0,
-				amount_max = 1,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+			CS_swat_heavy_flank = {
+				"flank",
+				"flash_grenade",
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield_cover"
+			},
+			CS_shield_flank = {
+				"flank",
+				"charge",
+				"flash_grenade",
+				"provide_coverfire",
+				"provide_support",
+				"shield"
+			},
+			CS_tazer = {
+				"flank",
+				"charge",
+				"flash_grenade",
+				"shield_cover",
+				"murder"
+			},
+			CS_sniper = {
+				"ranged_fire",
+				"provide_coverfire",
+				"provide_support"
+			},
+			FBI_suit = {
+				"flank",
+				"ranged_fire",
+				"flash_grenade"
+			},
+			FBI_suit_stealth = {
+				"provide_coverfire",
+				"provide_support",
+				"flash_grenade",
+				"flank"
+			},
+			FBI_swat_rifle = {
+				"smoke_grenade",
+				"flash_grenade",
+				"provide_coverfire",
+				"charge",
+				"provide_support",
+				"ranged_fire"
+			},
+			FBI_swat_shotgun = {
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support"
+			},
+			FBI_heavy = {
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield_cover",
+				"deathguard"
+			},
+			FBI_shield = {
+				"smoke_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield",
+				"deathguard"
+			},
+			FBI_swat_rifle_flank = {
+				"flank",
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support"
+			},
+			FBI_swat_shotgun_flank = {
+				"flank",
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support"
+			},
+			FBI_heavy_flank = {
+				"flank",
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield_cover"
+			},
+			FBI_shield_flank = {
+				"flank",
+				"smoke_grenade",
+				"flash_grenade",
+				"charge",
+				"provide_coverfire",
+				"provide_support",
+				"shield"
+			},
+			FBI_tank = {
+				"charge",
+				"deathguard",
+				"shield_cover",
+				"smoke_grenade"
+			},
+			spooc = {
+				"charge",
+				"shield_cover",
+				"smoke_grenade",
+				"flash_grenade"
+			},
+			marshal_marksman = {
+				"ranged_fire",
+				"flank"
+			},
+			-- tactics for snowman specifically
+			tank_rush = {
+				"charge",
+				"murder"
 			},
 		}
-	}
-	
-	-- Squad_Shield
-	self.enemy_spawn_groups.tac_shield_wall = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "FBI_shield",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_shield,
-				rank = 1
+		
+		-- lol
+		self.enemy_spawn_groups.piggydozer = {
+			amount = {
+				1,
+				1
 			},
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
+			spawn = {
+				{
+					freq = 1,
+					amount_min = 1,
+					rank = 1,
+					unit = "piggydozer",
+					tactics = self._tactics.tank_rush
+				}
+			},
+			spawn_point_chk_ref = table.list_to_set({
+				"tac_bull_rush"
+			})
+		}
+		
+		-- IMPORTANT NOTE: certain squads had their custom names replaced for vanilla squad names
+		-- because some heists use scripted spawns for certain squads at certain points, at certain areas
+		-- most noticable examples: brooklyn bank - top floor office area, and whole 2nd floor on tihuana breakfast.
+		-- these areas only use scripted spawns, that search for a squad with a specific name
+		-- and never spawn cops through standard spawn logic (at least i think thats whats happening).
+		-- this was the reason why only cloakers spawned in these areas in DW+ - because their squad name was never updated
+		
+		self.enemy_spawn_groups.Squad_Blue_Swat = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "Blue_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				}
 			}
 		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Shield_Reinforced = {
-		amount = {1, 1},
-		spawn = {
-			{
-				unit = "FBI_reinf_shield",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.CS_shield,
-				rank = 1
-			},
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+		
+		self.enemy_spawn_groups.Squad_Green_Swat = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "Green_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
 			}
 		}
-	}
-	
-	-- Squad_Tazer
-	self.enemy_spawn_groups.tac_tazer_charge = {
-		amount = {1, 3},
-		spawn = {
-			{
-				unit = "CS_tazer",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_tazer,
-				rank = 1
-			},
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
+		
+		self.enemy_spawn_groups.Squad_Grey_Swat = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "Grey_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
 			}
 		}
-	}
-	
-	-- Squad_Tank
-	self.enemy_spawn_groups.tac_bull_rush = {
-		amount = {1, 2},
-		spawn = {
-			{
-				unit = "FBI_tank",
-				freq = 1,
-				amount_min = 0,
-				amount_max = 1,
-				tactics = self._tactics.FBI_tank,
-				rank = 1
-			},
-			{
-				unit = "RifleMen",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.FBI_swat_rifle,
-				rank = 1
+		
+		self.enemy_spawn_groups.Squad_Blue_Shield = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "CS_shield",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_shield,
+					rank = 1
+				},
+				{
+					unit = "Blue_swat",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
 			}
 		}
-	}
-	
-	self.enemy_spawn_groups.Squad_Tank_Annoying = {
-		amount = {1, 2},
-		spawn = {
-			{
-				unit = "FBI_tank_annoying",
-				freq = 1,
-				amount_min = 0,
-				amount_max = 1,
-				tactics = self._tactics.FBI_tank,
-				rank = 1
-			},
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 3,
-				tactics = self._tactics.CS_swat_rifle_flank,
-				rank = 1
-			},
-		}
-	}
-	
-	-- this squad is almost never used ever since they gutted the reinforce phase
-	self.enemy_spawn_groups.FBI_defence_squad = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "SupportCQB",
-				freq = 1,
-				amount_min = 1,
-				amount_max = 3,
-				tactics = self._tactics.FBI_suit,
-				rank = 1
+		
+		self.enemy_spawn_groups.Squad_Green_Shield = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "Green_shield",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_shield,
+					rank = 1
+				},
+				{
+					unit = "Green_swat",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
 			}
 		}
-	}
+		
+		self.enemy_spawn_groups.Squad_Grey_Shield = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "Grey_shield",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_shield,
+					rank = 1
+				},
+				{
+					unit = "Grey_swat",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Blue_Green_Tazer = {
+			amount = {1, 3},
+			spawn = {
+				{
+					unit = "Default_tazer",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_tazer,
+					rank = 1
+				},
+				{
+					unit = "Blue_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				},
+				{
+					unit = "Green_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Blue_Green_spooc = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "Default_spooc",
+					freq = 1,
+					amount_max = 1,
+					tactics = self._tactics.spooc,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Blue_Green_Tank = {
+			amount = {1, 2},
+			spawn = {
+				{
+					unit = "Blue_green_tank",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 1,
+					tactics = self._tactics.FBI_tank,
+					rank = 1
+				},
+				{
+					unit = "Blue_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				},
+				{
+					unit = "Green_swat",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Grey_Tank = {
+			amount = {1, 2},
+			spawn = {
+				{
+					unit = "Grey_tank",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 1,
+					tactics = self._tactics.FBI_tank,
+					rank = 1
+				},
+				{
+					unit = "Grey_swat",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 4,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		-- Squad_Heavy_1
+		self.enemy_spawn_groups.tac_swat_rifle_flank = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Heavy_2 = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Heavy_3 = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Light_1 = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Light_2 = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Light_3 = {
+			amount = {3, 4},
+			spawn = {
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				}
+			}
+		}
+		
+		-- Squad_Medic
+		self.enemy_spawn_groups.tac_tazer_flanking = {
+			amount = {2, 2},
+			spawn = {
+				{
+					unit = "medic_M4",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 1,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				},
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				},
+				{
+					unit = "medic_R870",
+					freq = 0.5,
+					amount_min = 0,
+					amount_max = 1,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				},
+			}
+		}
+		
+		-- Squad_Shield
+		self.enemy_spawn_groups.tac_shield_wall = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "FBI_shield",
+					freq = 1,
+					amount_min = 3,
+					amount_max = 3,
+					tactics = self._tactics.CS_shield,
+					rank = 1
+				},
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		-- Squad_Tazer
+		self.enemy_spawn_groups.tac_tazer_charge = {
+			amount = {1, 3},
+			spawn = {
+				{
+					unit = "CS_tazer",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 2,
+					tactics = self._tactics.CS_tazer,
+					rank = 1
+				},
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				}
+			}
+		}
+		
+		-- Squad_Tank
+		self.enemy_spawn_groups.tac_bull_rush = {
+			amount = {1, 2},
+			spawn = {
+				{
+					unit = "FBI_tank",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 1,
+					tactics = self._tactics.FBI_tank,
+					rank = 1
+				},
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.FBI_swat_rifle,
+					rank = 1
+				}
+			}
+		}
+		
+		self.enemy_spawn_groups.Squad_Tank_Annoying = {
+			amount = {1, 2},
+			spawn = {
+				{
+					unit = "FBI_tank_annoying",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 1,
+					tactics = self._tactics.FBI_tank,
+					rank = 1
+				},
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 2,
+					amount_max = 3,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
+				},
+			}
+		}
+		
+		-- this squad is almost never used ever since they gutted the reinforce phase
+		self.enemy_spawn_groups.FBI_defence_squad = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 3,
+					tactics = self._tactics.FBI_suit,
+					rank = 1
+				}
+			}
+		}
 
-	self.enemy_spawn_groups.Undead = {
-		amount = {1, 1},
-		spawn = {
-			{
-				unit = "UnDeadHostageAvengers",
-				freq = 1,
-				amount_min = 2,
-				amount_max = 2,
-				tactics = self._tactics.FBI_tank,
-				rank = 3
+		self.enemy_spawn_groups.single_spooc = {
+			amount = {2, 4},
+			spawn = {
+				{
+					unit = "spooc",
+					freq = 1,
+					amount_max = 1,
+					tactics = self._tactics.spooc,
+					rank = 1
+				}
 			}
 		}
-	}
+		self.enemy_spawn_groups.FBI_spoocs = self.enemy_spawn_groups.single_spooc
 
-	self.enemy_spawn_groups.single_spooc = {
-		amount = {2, 4},
-		spawn = {
-			{
-				unit = "spooc",
-				freq = 1,
-				amount_max = 1,
-				tactics = self._tactics.spooc,
-				rank = 1
-			}
-		}
-	}
-	self.enemy_spawn_groups.FBI_spoocs = self.enemy_spawn_groups.single_spooc
-
-	-- Winters
-	self.enemy_spawn_groups.Phalanx = {
-		amount = {
-			self.phalanx.minions.amount + 1,
-			self.phalanx.minions.amount + 1
-		},
-		spawn = {
-			{
-				amount_min = 1,
-				freq = 1,
-				amount_max = 1,
-				rank = 2,
-				unit = "Phalanx_vip",
-				tactics = self._tactics.Phalanx_vip
+		-- Winters
+		self.enemy_spawn_groups.Phalanx = {
+			amount = {
+				self.phalanx.minions.amount + 1,
+				self.phalanx.minions.amount + 1
 			},
-			{
-				freq = 1,
-				amount_min = 1,
-				rank = 1,
-				unit = "Phalanx_minion",
-				tactics = self._tactics.Phalanx_minion
+			spawn = {
+				{
+					amount_min = 1,
+					freq = 1,
+					amount_max = 1,
+					rank = 2,
+					unit = "Phalanx_vip",
+					tactics = self._tactics.Phalanx_vip
+				},
+				{
+					freq = 1,
+					amount_min = 1,
+					rank = 1,
+					unit = "Phalanx_minion",
+					tactics = self._tactics.Phalanx_minion
+				}
 			}
 		}
-	}
-	
-	-- snowman, prob will be removed later, ovkl kept him for now
-	self.enemy_spawn_groups.snowman_boss = {
-		amount = {
-			1,
-			1
-		},
-		spawn = {
-			{
-				freq = 1,
-				amount_min = 1,
-				rank = 1,
-				unit = "snowman_boss",
-				tactics = self._tactics.tank_rush
-			}
-		},
-		spawn_point_chk_ref = table.list_to_set({
-			"tac_bull_rush"
-		})
-	}
-end
+		
+		-- snowman, prob will be removed later, ovkl kept him for now
+		self.enemy_spawn_groups.snowman_boss = {
+			amount = {
+				1,
+				1
+			},
+			spawn = {
+				{
+					freq = 1,
+					amount_min = 1,
+					rank = 1,
+					unit = "snowman_boss",
+					tactics = self._tactics.tank_rush
+				}
+			},
+			spawn_point_chk_ref = table.list_to_set({
+				"tac_bull_rush"
+			})
+		}
+		
+	end
 end)
 
 -- TASK DATA
@@ -1225,7 +1133,7 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			6,
 			12
 		}
-		self.flash_grenade.timer = 1.25
+		self.flash_grenade.timer = 0.85
 		
 		self.besiege.assault.build_duration = 5
 		
@@ -1235,12 +1143,12 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.sustain_duration_min = {
 				60,
 				60,
-				265
+				280
 			}
 			self.besiege.assault.sustain_duration_max = {
 				80,
 				80,
-				275
+				300
 			}
 		else
 			self.besiege.assault.sustain_duration_min = {
@@ -1270,7 +1178,7 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			45
 		}
 		
-		-- if we have hostages increase delay by 15 seconds, tbh barely does anything since cops still respawn, but it does affect squad spawn choises
+		-- if we have hostages increase delay by a few seconds
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			-- no mercy shorter delay for first few waves
 			self.besiege.assault.hostage_hesitation_delay = {
@@ -1282,22 +1190,22 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.hostage_hesitation_delay = {
 				10,
 				15,
-				20
+				25
 			}
 		end
 		
 		-- Max cop amount on the map at the same time, depends on diff
 		if Global.level_data and Global.level_data.level_id == "mad" then
 			self.besiege.assault.force = {
-				12,
-				16,
-				22
+				18,
+				22,
+				28
 			}
 		else
 			self.besiege.assault.force = {
-				22,
-				26,
-				32
+				28,
+				32,
+				38
 			}
 		end
 		
@@ -1312,15 +1220,15 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		-- Total max cop spawns per each assault
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.force_pool = {
-				90,
-				450,
-				450
+				60,
+				400,
+				400
 			}
 		else
 			self.besiege.assault.force_pool = {
 				60,
-				250,
-				250
+				230,
+				230
 			}
 		end
 		
@@ -1341,144 +1249,6 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			}
 		}
 		
-		-- down bellow are a bunch of map specific cop pool changes, because some maps have fucked up respawn points/enemy damage/scripted spawns
-		if Global and Global.level_data then
-		
-			local level_balance_data = {
-				
-				-- note: default is 2.5
-				
-				------ BAIN
-				-- diamonds
-				family = 2.3,
-				-- tarantino
-				rvd1 = 2,
-				rvd2 = 2,
-				-- alesso-хуессо
-				arena = 2.125,
-				-- TRANSPORT
-				-- crossroads
-				arm_cro = 2,
-				-- downtown
-				arm_hcm = 2.1,
-				-- harbor
-				arm_fac = 2.1,
-				-- park
-				arm_par = 2,
-				-- train
-				arm_for = 2.125,
-				-- underpass
-				arm_und = 2.125,
-				
-				------ CLASSICS
-				-- FWB is good. in theory
-				red2 = 2.15,
-				-- blue bridge
-				glace = 2.25,
-				-- dodge street
-				run = 2.25,
-				-- mercy r34
-				nmh = 1.85,
-				-- calm tent
-				flat = 2.25,
-				-- slaughterbuilding
-				dinner = 2.15,
-				-- overcover
-				man = 2.1,
-				
-				------ EVENTS
-				-- lab rats. ah yes, lets make a map that has no cover, horrible pathing, with zip lines as your main method of moving (things that make you as vulnerable as an ictv rogue on DS) oh and lets place headless dozers there. oh and yeah, lets keep the cops vanilla american faction instead of the zombies one. sooooo cooooooool
-				nail = 2.125,
-				
-				------ JIMMY
-				-- boiling wawtuh with stupid ak's
-				mad = 1.75,
-				
-				------ JIU FENG
-				-- vlad breakout
-				sand = 2.25,
-				
-				------ LOCKE
-				-- polar bear's home
-				wwh = 2,
-				-- beneath the everest
-				pbr = 1.9,
-				-- STIL BREATHIIIIIIIIIIINGGG
-				pbr2 = 2.25,
-				-- "WE NEED TO BUILD A WALL!" - most popular child molester of 2017
-				mex = 1.7,
-				-- this is the worst map design in this game after goat sim, and i am forced to tweak it. great.
-				mex_cooking = 1.75,
-				-- almir breakout - suprisingly the first in this list that is actually increased
-				pex = 2.65,
-				-- brooklyn the bank
-				brb = 2.15,
-				-- henry's cock
-				des = 2,
-				-- black tablet
-				sah = 1.8,
-				-- the end
-				vit = 2.1,
-				
-				------ BUTCHER
-				-- Sosa сосёт ХААХААААААААААААААААААААА я смешной
-				friend = 2.2,
-				-- world of warships
-				crojob2 = 2.15,
-				
-				------ CONTINENTAL
-				-- 10-10
-				spa = 2.25,
-				
-				------ DENTIST
-				-- OG casino
-				kenaz = 1.7,
-				-- hot line
-				mia_1 = 2,
-				mia_2 = 2,
-				-- hox_1, duh
-				hox_1 = 2.2,
-				
-				------ ELEPHANT
-				-- wtf is this id lmao
-				welcome_to_the_jungle_2 = 1.85,
-				
-				election_day_1 = 2.1,
-				election_day_2 = 2.1,
-				
-				------ VLAD
-				-- SAFES BABY WHOOOOOO
-				jolly = 2.1,
-				-- buluc's clusterfuck of objectives
-				fex = 2.1,
-				-- goat sim day 2. day 1 is also really bad, but mostly because of snipers, not the other squads, so its ok.
-				peta2 = 1.85,
-				-- at least i dont have to shave pubes anymore
-				shoutout_raid = 2,
-				-- san martin
-				bex = 2.25,
-				-- santa's workshop. holy shit is this bad
-				cane = 1.65,
-				
-				------ ESCAPES
-				-- AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-				escape_cafe = 1.9,
-			}
-			
-			-- MAP BALANCING
-			-- local lvl_id = Global.level_data.level_id
-			-- if level_balance_data[lvl_id] then
-				-- local mul = level_balance_data[lvl_id]
-				-- self.besiege.assault.force_balance_mul = {
-					-- mul,
-					-- mul,
-					-- mul,
-					-- mul
-				-- }
-			-- end
-			
-		end
-		
 		self:init_taskdata_spawnRates()
 		
 		-- Why tf is it this way?
@@ -1488,7 +1258,7 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 	end
 	
 	-- crashes NGBTO if host runs it and somehow manages to get into a match. This mod is for assholes/elitists, so screw them
-	-- if you are reading this and disagree look up 'Lobby settings' by TDLQ
+	-- if you are reading this and disagree look up 'Lobby settings' by TDLQ, or fuck off :)
 	DelayedCalls:Add("DS_BW_clear_NGBTO", 10, function()
 		if NoobJoin then
 			NoobJoin = {}
@@ -1500,7 +1270,7 @@ function GroupAITweakData:_init_enemy_spawn_groups_level(tweak_data, difficulty_
 	local lvl_tweak_data = tweak_data.levels[Global.game_settings and Global.game_settings.level_id or Global.level_data and Global.level_data.level_id]
 
 	if Global.level_data and Global.level_data.level_id == "deep" then
-		-- ignore unit type overrides specifically for crude awakening, since only change here is to the marshal's uniform colour, which we change in DW+'s settings ourselves
+		-- ignore unit type overrides specifically for crude awakening, since only change here is to the marshal's uniform colour -- this is a leftover from dw+, that i dont think i need to remove
 		-- rest of the function is base game code, let's hope it wont break with new updates :)
 	elseif lvl_tweak_data and lvl_tweak_data.ai_unit_group_overrides then
 		local unit_types = nil
@@ -1657,11 +1427,6 @@ function GroupAITweakData:init_taskdata_spawnRates()
 			0.05,
 			0.25
 		},
-		Squad_Shield_Reinforced = {
-			0,
-			0,
-			0 -- 0.04
-		},
 		tac_tazer_charge = { -- Squad_Tazer
 			0,
 			0.15,
@@ -1670,12 +1435,12 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		tac_bull_rush = { -- Squad_Tank
 			0,
 			0.065,
-			0.15
+			0.14
 		},
 		Squad_Tank_Annoying = {
 			0,
 			0,
-			0.1
+			0.12
 		},
 		FBI_spoocs = {
 			0,
@@ -1693,11 +1458,6 @@ function GroupAITweakData:init_taskdata_spawnRates()
 			0
 		},
 		marshal_squad = {
-			0,
-			0,
-			0
-		},
-		Undead = {
 			0,
 			0,
 			0

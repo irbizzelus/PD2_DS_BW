@@ -40,7 +40,7 @@ if not DS_BW.CM then
 		managers.chat:send_message(ChatManager.GAME, nil, text)
 	end
 	
-	-- preferably this message should have a [DSBW Private Message] prefix, but this would require sending name send requests
+	-- preferably this message should have a [DS_BW Private Message] prefix, but this would require sending name send requests
 	-- this already sometimes causes sync issues with the welcome message at high ping, so fuck that.
 	function DS_BW.CM:private_chat_message(peer_id, message)
 		if not message or (message == "") then
@@ -49,7 +49,7 @@ if not DS_BW.CM then
 		
 		local peer = managers.network:session():peer(peer_id)
 		if peer_id == self:local_peer():id() then
-			managers.chat:_receive_message(1, "[DS_BW]", message, tweak_data.system_chat_color or Color(255,255,0,0) / 255)
+			managers.chat:_receive_message(1, "[DS_BW]", message, DS_BW.color or tweak_data.system_chat_color)
 		else
 			if managers.network:session():peer(peer_id) then
 				managers.network:session():send_to_peer(peer, "send_chat_message", 1, message)
@@ -66,7 +66,7 @@ if not DS_BW.CM then
 		local command = self.commands and self.commands[lower_cmd]
 		
 		if not command then
-			if not Network:is_client() then
+			if Network:is_server() then
 				if DS_BW.DS_difficultycheck then
 					self:private_chat_message(sender:id(), "Such command doesn't exist.")
 					return

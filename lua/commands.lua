@@ -42,7 +42,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("flash", {
 		callback = function(sender)
-			local msg = "All flashbangs will now explode twice as quickly. If flashbang was not successfully destroyed, there is a 75% chance for it to be replaced by a small, but really high damaging, fire field. This field lasts for about 5 seconds."
+			local msg = "Flashbangs will detonate 3 times as quickly. If not successfully destroyed, there is a 40% chance for the flashbang to be replaced by a small but highly damaging fire field, 40% chance for a medium damaging gas grenade, or it may just remain as flashbang."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else
@@ -89,6 +89,43 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	-- this command is hidden if host doesnt have a hidden mod list, but still can be activated, tho there's no reason for that, since you can see mods under player list tab
 	-- however, if host's mod list is hidden, at the end of the welcome message clients will be informed of the hidden mod list, and would be given instruction on how to use this command
 	-- if host uses this command, they will just recieve a random quote from the list bellow, to keep slimy mod hiders guessing what's happening
+	
+	-- i know some of these, but the rest i just found funny from some quotes website
+	local gibberish = {
+		"You have died of dysentery.",
+		"Praise the sun!",
+		"Does this unit have a soul?",
+		"Stop right there, criminal scum!",
+		"Space. Space. I'm in space. SPAAAAAAACE!",
+		"Grass grows, birds fly, sun shines, and brother, I hurt people.",
+		"This is a bucket.",
+		"There is nothing. Only warm, primordial blackness. Your conscience ferments in it — no larger than a single grain of malt. You don't have to do anything anymore. Ever. Never ever.",
+		"The man does not know the bullet has entered his brain. He never will. Death comes faster than the realization.",
+		"This is real darkness. It's not death, or war, or child molestation. Real darkness has love for a face. The first death is in the heart, Harry.",
+		"The pain of your absence is sharp and haunting, and I would give anything not to know it; anything but never knowing you at all (which would be worse).",
+		"Science compels us to explode the sun.",
+		"Like a fly to the oinment, your conscience sticks to it. The limbed and headed machine of pain and undignified suffering is firing up again. It wants to walk the desert. Hurting. Longing. Dancing to disco music.",
+		"You found a joke placeholder! There is not joke here yet. Hmmmm, maybe you can think of one?",
+		"Nicolas Cage is my waifu.",
+		"Cats are cute.",		
+		"The Eiffel Tower can be 15 cm taller during the summer, due to thermal expansion meaning the iron heats up, the particles gain kinetic energy and take up more space.",
+		"Australia is wider than the moon. The moon sits at 3400km in diameter, while Australia’s diameter from east to west is almost 4000km.",
+		"It's illegal to own just one guinea pig in Switzerland. It's considered animal abuse because they're social beings and get lonely.",
+		"The unicorn is the national animal of Scotland. It was apparently chosen because of its connection with dominance and chivalry as well as purity and innocence in Celtic mythology",
+		"Ketchup was once sold as medicine. The condiment was prescribed and sold to people suffering with indigestion back in 1834.",
+		"A jiffy is an actual unit of time. It's 1/100th of a second.",
+		"Sliced bread was first manufactured by machine and sold in the 1920s by the Chillicothe Baking Company in Missouri. It was the greatest thing since...unsliced bread?",
+		"Wombats are the only animal whose poop is cube-shaped. This is due to how its intestines form the feces. The animals then stack the cubes to mark their territory. 'Insert minecraft joke here'",
+		"What do you call an ant who fights crime? A vigilANTe!",
+		"What does a storm cloud wear under his raincoat? Thunderwear.",
+		"What did the policeman say to his hungry stomach? 'Freeze. You’re under a vest.'",
+		"What social event do spiders love to attend? Webbings.",
+		"Why are pizza jokes the worst? They’re too cheesy.",
+		"What did the elf learn in school? The elf-abet.",
+		"Why are elevator jokes the funniest? Because they work on so many levels.",
+		"What did the snowman ask the other snowman? 'Do you smell carrots?'",
+		"You have unlocked existential dread!"
+	}
 	DS_BW.CM:add_command("hostmods", {
 		callback = function(sender)
 			if sender:id() ~= 1 then
@@ -103,26 +140,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 					end
 				end
 			else
-				-- i know most of these, but i gotta be honest, i took a couple that i found funny from some quotes website (most of the top of this list)
-				local random_message = {
-					"You have died of dysentery.",
-					"Praise the sun!",
-					"Are you a boy or a girl?",
-					"Does this unit have a soul?",
-					"Stop right there, criminal scum!",
-					"Do a barrel roll!",
-					"Space. Space. I'm in space. SPAAAAAAACE!",
-					"Grass grows, birds fly, sun shines, and brother, I hurt people.",
-					"It's a-me, Mario!",
-					"It's time to chew ass and kick bubblegum... and I'm all outta bubblegum.",
-					"This is a bucket.",
-					"There is nothing. Only warm, primordial blackness. Your conscience ferments in it — no larger than a single grain of malt. You don't have to do anything anymore. Ever. Never ever.",
-					"The man does not know the bullet has entered his brain. He never will. Death comes faster than the realization.",
-					"This is real darkness. It's not death, or war, or child molestation. Real darkness has love for a face. The first death is in the heart, Harry.",
-					"The pain of your absence is sharp and haunting, and I would give anything not to know it; anything but never knowing you at all (which would be worse).",
-					"Science compels us to explode the sun.",
-				}
-				DS_BW.CM:private_chat_message(sender:id(), random_message[math.random(1,16)])
+				DS_BW.CM:public_chat_message(gibberish[math.random(1,33)])
 			end
 		end
 	})
@@ -139,25 +157,25 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 					DS_BW.CM:private_chat_message(sender:id(), "You have allready requested host's mod list.")
 				end
 			else
-				local random_message = {
-					"You have died of dysentery.",
-					"Praise the sun!",
-					"Are you a boy or a girl?",
-					"Does this unit have a soul?",
-					"Stop right there, criminal scum!",
-					"Do a barrel roll!",
-					"Space. Space. I'm in space. SPAAAAAAACE!",
-					"Grass grows, birds fly, sun shines, and brother, I hurt people.",
-					"It's a-me, Mario!",
-					"It's time to chew ass and kick bubblegum... and I'm all outta bubblegum.",
-					"This is a bucket.",
-					"There is nothing. Only warm, primordial blackness. Your conscience ferments in it — no larger than a single grain of malt. You don't have to do anything anymore. Ever. Never ever.",
-					"The man does not know the bullet has entered his brain. He never will. Death comes faster than the realization.",
-					"This is real darkness. It's not death, or war, or child molestation. Real darkness has love for a face. The first death is in the heart, Harry.",
-					"The pain of your absence is sharp and haunting, and I would give anything not to know it; anything but never knowing you at all (which would be worse).",
-					"Science compels us to explode the sun.",
-				}
-				DS_BW.CM:private_chat_message(sender:id(), random_message[math.random(1,16)])
+				DS_BW.CM:public_chat_message(gibberish[math.random(1,33)])
+			end
+		end
+	})
+	
+	DS_BW.CM:add_command("rng", {
+		callback = function(sender)
+			local am_angry = math.random() <= 0.2
+			if am_angry then
+				local peer = managers.network and managers.network:session() and managers.network:session():peer(sender:id())
+				local unit = peer and peer:unit() or nil
+				if (unit and alive(unit)) then
+					DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get cuffed.")
+					unit:movement():on_cuffed()
+				else
+					DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get a job.")
+				end
+			else
+				DS_BW.CM:public_chat_message(gibberish[math.random(1,33)])
 			end
 		end
 	})

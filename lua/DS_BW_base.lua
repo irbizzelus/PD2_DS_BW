@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.0.1"
-	DS_BW.version_num = 1.01
+	DS_BW.version = "1.0.2"
+	DS_BW.version_num = 1.02
 	DS_BW.settings = {
 		-- info msg
 		skills_showcase = 2,
@@ -42,7 +42,7 @@ if not DS_BW then
 			requested_mods_2 = false,
 		}
 	end
-	DS_BW.color = Color(255,217,0,217) / 255
+	DS_BW.color = Color(255,240,140,35) / 255
 	DS_BW.end_stats_printed = false
 
     function DS_BW:Save()
@@ -71,7 +71,7 @@ if not DS_BW then
     -- Notify the user if something went wrong
     if not configResult then
         Hooks:Add("MenuManagerOnOpenMenu", "DS_BW_configcorrupted", function(menu_manager, nodes)            
-            QuickMenu:new("DSBW Error", "Your 'DSBW' options file was corrupted, all the mod options have been reset to defaults.", {
+            QuickMenu:new("DS_BW Error", "Your 'Death Sentence, But Worse' options file was corrupted, all the mod options have been reset to defaults.", {
                 [1] = {
                     text = "OK",
                     is_cancel_button = true
@@ -220,7 +220,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = "1.0.1 release\n\nWelcome to release."
+				local message = "1.0.2 release\n\nWelcome to DSBW!\n\nWhenever a big enough update for this mod is published in the future, this pop-up window will let you know of most important changes.\nMinor updates and bug fixes most likely will not appear here, but if you would like to know what was changed, you can always do so in options->mod options->DSBW->patch notes.\n\nGood luck and have fun!"
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
@@ -245,7 +245,7 @@ if not DS_BW then
 					end
 					local message = "Hello and welcome "..peer:name().."! This lobby runs 'Death Sentence, but Worse' mod (Ver. "..DS_BW.version..") that adjusts loud gameplay in a few ways:"
 					if managers.network:session() and managers.network:session():peers() then
-						peer:send("request_player_name_reply", "DSBW")
+						peer:send("request_player_name_reply", "DS_BW")
 						peer:send("send_chat_message", ChatManager.GAME, message)
 						DS_BW.players[peer_id].welcome_msg1_shown = true
 					end
@@ -269,42 +269,27 @@ if not DS_BW then
 						return
 					end
 					if managers.network:session() and managers.network:session():peers() then
-						
 						if Global.level_data and Global.level_data.level_id == "mad" then
-							peer:send("send_chat_message", ChatManager.GAME, "- WHY DID YOU COME TO RUSSIA? 'Boiling Point' heist damage output was 'fixed' to make enemies deal full DS damage.")
+							peer:send("send_chat_message", ChatManager.GAME, "- WHY DID YOU COME TO RUSSIA? 'Boiling Point' heist damage output was 'fixed' to make some enemies deal full DS damage.")
 							peer:send("send_chat_message", ChatManager.GAME, "- All enemies have 75% DAMAGE RESISTANCE - please note that lower health enemies are used more often, and amount of enemies is also lower: /dmg")
-							peer:send("send_chat_message", ChatManager.GAME, "- Almost all enemies will IGNORE THE ECM STUN effect: /ecm")
-							peer:send("send_chat_message", ChatManager.GAME, "- You can GET HANDCUFFED during interactions by cops: /cuffs")
-							peer:send("send_chat_message", ChatManager.GAME, "- Enemies are MUCH harder to intimidate: /dom")
-							peer:send("send_chat_message", ChatManager.GAME, "- Flashbangs can sometimes be replaced by FIRETRAPS: /flash")
-							peer:send("send_chat_message", ChatManager.GAME, "- Enemy variety, weapon usage and behavior were altered to make your life worse: /cops")
-							peer:send("send_chat_message", ChatManager.GAME, "- Assault pacing was altered: /assault")
-							peer:send("send_chat_message", ChatManager.GAME, "- Swat turrets will no longer self repair :)")
-							peer:send("send_chat_message", ChatManager.GAME, "You can request additional information for all gameplay changes using associated chat commands - it will be sent to you in a private message. Bring your best build and a lot of ammo. Good luck.")
-							if DS_BW and not MenuCallbackHandler:is_modded_client() then
-								peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
-							end
-							peer:send("request_player_name_reply", managers.network.account:username())
-							DS_BW.players[peer_id].welcome_msg2_shown = true
 						else
 							peer:send("send_chat_message", ChatManager.GAME, "- All enemies have 50% DAMAGE RESISTANCE: /dmg")
-							peer:send("send_chat_message", ChatManager.GAME, "- Almost all enemies will IGNORE THE ECM STUN effect: /ecm")
-							peer:send("send_chat_message", ChatManager.GAME, "- You can GET HANDCUFFED during interactions by cops: /cuffs")
-							peer:send("send_chat_message", ChatManager.GAME, "- Enemies are MUCH harder to intimidate: /dom")
-							peer:send("send_chat_message", ChatManager.GAME, "- Flashbangs can sometimes be replaced by FIRETRAPS: /flash")
-							peer:send("send_chat_message", ChatManager.GAME, "- Enemy variety, weapon usage and behavior were altered to make your life worse: /cops")
-							peer:send("send_chat_message", ChatManager.GAME, "- Assault pacing was altered: /assault")
-							peer:send("send_chat_message", ChatManager.GAME, "- Swat turrets will no longer self repair :)")
-							peer:send("send_chat_message", ChatManager.GAME, "You can request additional information for all gameplay changes using associated chat commands - it will be sent to you in a private message. Bring your best build and a lot of ammo. Good luck.")
-							if DS_BW and not MenuCallbackHandler:is_modded_client() then
-								peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
-							end
-							peer:send("request_player_name_reply", managers.network.account:username())
-							DS_BW.players[peer_id].welcome_msg2_shown = true
 						end
+						peer:send("send_chat_message", ChatManager.GAME, "- Almost all enemies will IGNORE THE ECM STUN effect: /ecm")
+						peer:send("send_chat_message", ChatManager.GAME, "- You can GET HANDCUFFED during interactions by cops: /cuffs")
+						peer:send("send_chat_message", ChatManager.GAME, "- Enemies are MUCH harder to intimidate: /dom")
+						peer:send("send_chat_message", ChatManager.GAME, "- Flashbangs have a chance to detonate as FIRE or a GAS grenade: /flash")
+						peer:send("send_chat_message", ChatManager.GAME, "- Enemy variety, weapons used and tactical behavior were altered to make your life worse: /cops")
+						peer:send("send_chat_message", ChatManager.GAME, "- Assault pacing was altered: /assault")
+						peer:send("send_chat_message", ChatManager.GAME, "- Swat turrets will no longer self repair :)")
+						peer:send("send_chat_message", ChatManager.GAME, "You can request additional information for all gameplay changes using associated chat commands - it will be sent to you in a private message. Bring your best build and a lot of ammo. Good luck.")
+						if DS_BW and not MenuCallbackHandler:is_modded_client() then
+							peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
+						end
+						peer:send("request_player_name_reply", managers.network.account:username())
+						DS_BW.players[peer_id].welcome_msg2_shown = true
 					end
 				end
-				
 			end)
 		end
 	end

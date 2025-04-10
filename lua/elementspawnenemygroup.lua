@@ -70,9 +70,9 @@ Hooks:PostHook(ElementSpawnEnemyGroup, "_finalize_values", "DS_BW_replacespawngr
 	if #currentSpawnGroups == #groupsNormal and table.contains_all(currentSpawnGroups, groupsNormal) then
 		-- standard groups, good.
 	elseif #currentSpawnGroups == #groupsCustomMaps and table.contains_all(currentSpawnGroups, groupsCustomMaps) then
-		log("[DWBW] 'ElementSpawnEnemyGroup' detected and used a custom maps spawn groups list.")
+		log("[DS_BW] 'ElementSpawnEnemyGroup' detected and used a custom maps spawn groups list.")
 	elseif #currentSpawnGroups == #groupsNoMarshal and table.contains_all(currentSpawnGroups, groupsNoMarshal) then
-		log("[DWBW] 'ElementSpawnEnemyGroup' detected and used a marshal-free spawn groups list.")
+		log("[DS_BW] 'ElementSpawnEnemyGroup' detected and used a marshal-free spawn groups list.")
 	else
 		return
 	end

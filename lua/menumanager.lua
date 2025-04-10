@@ -69,7 +69,7 @@ Hooks:Add('MenuManagerInitialize', 'DS_BW_init', function(menu_manager)
 	end
 	
 	MenuCallbackHandler.DS_BWcb_patch_notes = function(this, item)
-		managers.network.account:overlay_activate("url", "https://github.com/irbizzelus/Death-Wish-Plus/releases")
+		managers.network.account:overlay_activate("url", "https://github.com/irbizzelus/PD2_DS_BW/releases")
 	end
 
 	DS_BW:Load()
@@ -122,7 +122,7 @@ Hooks:PostHook(MenuManager, "_node_selected", "DS_BW:Node", function(self, menu_
 				DelayedCalls:Add("DS_BW_show_NGBTO_warning", 0.3, function()
 					local menu_options = {}
 					menu_options[1] = {text = "Ok", is_cancel_button = true}
-					local menu = QuickMenu:new("Death Sentence, but Worse.", "DSBW is incompatible with NGBTO (newbies go back to overkill) and will cause crashes mid game. Remove NGBTO to avoid crashes and this message.\n\nIf you want to limit access to your lobby use TDLQ's 'Lobby settings' mod. You can find it on their web site, NOT modworkshop.", menu_options)
+					local menu = QuickMenu:new("Death Sentence, but Worse.", "DS_BW is incompatible with NGBTO (newbies go back to overkill) and will cause crashes mid game. Remove NGBTO to avoid crashes and this message.\n\nIf you want to limit access to your lobby use TDLQ's 'Lobby settings' mod. You can find it on their web site, NOT modworkshop.", menu_options)
 					menu:Show()
 				end)
 			end

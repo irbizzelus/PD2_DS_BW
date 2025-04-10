@@ -102,7 +102,7 @@ if not DS_BW.CopUtils then
 		for i, enemy in pairs(enemies) do
 			if self:AreUnitsEnemies(player_unit, enemy) then
 				local enemy_chartweak = enemy:base():char_tweak()
-				if enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DSBW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DSBW_tag_miniboss") then
+				if enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
 					local dist = mvector3.distance(enemy:position(), playerpos)
 					local is_available = enemy:brain():is_available_for_assignment(objective)
 

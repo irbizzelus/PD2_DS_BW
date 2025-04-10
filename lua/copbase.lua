@@ -2,7 +2,7 @@
 -- note: g36 deals 375 damage on light and heavy zeal units. i tried, it sucks outside of dodge builds. dont do it again.
 Hooks:PreHook(CopBase, "post_init", "DS_BW_CopBase_post_init", function(self)
 	local weapon_mapping = {}
-	if DS_BW and DS_BW.DS_difficultycheck and DS_BW.settings_config then
+	if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then
 		weapon_mapping = {
 			
 			------ AMERICA ------

@@ -1,5 +1,5 @@
 -- self-explanatory - prevents a crash when info is missing
--- in DSBW this should only occur when we force a boss unit spawn
+-- in DS_BW this should only occur when we force a boss unit spawn
 Hooks:PreHook(CopMovement, "team", "DS_BW_setcopteamifnoteam", function(self)
 	if not self._team then
 		self:set_team(managers.groupai:state()._teams[tweak_data.levels:get_default_team_ID(self._unit:base():char_tweak().access == "gangster" and "gangster" or "combatant")])

@@ -51,8 +51,8 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 							end
 						else
 							if sp.interval then
-								if DS_BW.Miniboss_info.is_alive and sp.interval ~= 2.5 then
-									sp.interval = 2.5
+								if DS_BW.Miniboss_info.is_alive and sp.interval ~= 0.75 then
+									sp.interval = 0.75
 								elseif sp.interval ~= 1.5 then
 									sp.interval = 1.5
 								end
@@ -74,8 +74,8 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 						end
 					else -- otherwise spawn slighlty faster then vanila, and slightly slower then vanila when boss is present
 						if sp.interval then
-							if DS_BW.Miniboss_info.is_alive and sp.interval ~= 5 then
-								sp.interval = 5
+							if DS_BW.Miniboss_info.is_alive and sp.interval ~= 1.5 then
+								sp.interval = 1.5
 							elseif sp.interval ~= 3 then
 								sp.interval = 3
 							end
@@ -87,13 +87,13 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 	end
 	
 	if not self._DS_BW_dmg_reduction then
-		self:apply_DSBW_dmg_reduction_loop()
+		self:apply_DS_BW_dmg_reduction_loop()
 	end
 	
 end)
 
 -- add the 50% damage reduction every 10 seconds. this makes it active 24/7 regardless of other factors that might disable it
-function GroupAIStateBesiege:apply_DSBW_dmg_reduction_loop()
+function GroupAIStateBesiege:apply_DS_BW_dmg_reduction_loop()
 	
 	-- stealth is ignored
 	if managers.groupai:state():whisper_mode() then
@@ -104,15 +104,20 @@ function GroupAIStateBesiege:apply_DSBW_dmg_reduction_loop()
 		self._DS_BW_dmg_reduction = true
 	end
 	
-	-- if this value is higher then our current dmg reduction, game will try to increase it automaticaly as if winters is alive. but since he is not alive, game crashes.
+	-- if our wanted dmg reduction is higher then this variable, game will try to increase it automaticaly to the max as if winters is alive. but since he isnt, game crashes.
 	tweak_data.group_ai.phalanx.vip.damage_reduction.max = 0.49
 	-- values slightly lower then 0.5 and 0.666 to avoid accidental damage breakpoint fuckery for everyone invloved, in case base games calculations round damage weirdly
 	local dmg_resist_amount = 0.49
-	-- because this map only has 1 unit that can have DS levels of damage, we set it to 75%, since that unit has 40 hp. also disable boss there
+	-- because this map only has 1 unit that can have DS levels of damage, we set it to 75%, since that unit has 40 hp
 	if Global.level_data and Global.level_data.level_id == "mad" then
 		dmg_resist_amount = 0.74
-	elseif DS_BW.Miniboss_info.is_alive then
-		dmg_resist_amount = 0.66
+	end
+	if DS_BW.Miniboss_info.is_alive then
+		if Global.level_data and Global.level_data.level_id == "mad" then
+			dmg_resist_amount = 0.79
+		else
+			dmg_resist_amount = 0.66
+		end
 	end
 	
 	self:set_phalanx_damage_reduction_buff(dmg_resist_amount)
@@ -123,7 +128,46 @@ function GroupAIStateBesiege:apply_DSBW_dmg_reduction_loop()
 		DS_BW:update_surrender_tweak_data()
 	end
 	
+	local escapes = {
+		"escape_overpass",
+		"escape_overpass_night",
+		"escape_park",
+		"escape_park_day",
+		"escape_cafe",
+		"escape_cafe_day",
+		"escape_garage",
+		"escape_street",
+	}
+	
+	if Global.level_data and table.contains(escapes, Global.level_data.level_id)  then
+		if not DS_BW.Assault_info.is_infinite then
+			managers.groupai:state():set_wave_mode("hunt")
+		end
+	end
+	
+	-- if boss unit was not found while its supposed to be active, pop a message and update vars related to them.
+	-- could happen during mission scripts that kill all enemies, for example beneeath the mountatin after going up the elevator zip line
+	if DS_BW.Miniboss_info.is_alive then
+		local is_boss_unit_found = false
+		for u_key, u_data in pairs(managers.enemy:all_enemies()) do
+			if u_data.unit:base():char_tweak().tags and table.contains(u_data.unit:base():char_tweak().tags, "DS_BW_tag_miniboss") then
+				is_boss_unit_found = true
+			end
+		end
+		if not is_boss_unit_found then
+			DS_BW.Miniboss_info.is_alive = false
+			DS_BW.Miniboss_info.kill_counter = 0
+			if DS_BW.end_stats_header_printed then -- if bosses dissapear but we are at the game over screen, dont send messages
+				local dmg_resist_str = "50"
+				if Global.level_data and Global.level_data.level_id == "mad" then
+					dmg_resist_str = "75"
+				end
+				DS_BW.CM:public_chat_message("[DS_BW] Devil duo is gone, enemy damage resistance reduced back to "..dmg_resist_str.."%.")
+			end
+		end
+	end
+	
 	DelayedCalls:Add("DS_BW_reapply_dmg_reduction", 5, function()
-		self:apply_DSBW_dmg_reduction_loop()
+		self:apply_DS_BW_dmg_reduction_loop()
 	end)
 end
