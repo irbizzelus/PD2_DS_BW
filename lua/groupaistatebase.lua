@@ -204,7 +204,7 @@ function GroupAIStateBase:set_difficulty(value)
 								end
 								
 								-- make bosses attack chosen player's position.
-								local target_id = chosen_player.id
+								local target_id = alive_player_positions[chosen_player].id
 								local target_loc = false
 								if target_id == 1 and managers.player and managers.player:player_unit() and alive(managers.player:player_unit()) then
 									target_loc = managers.player:player_unit():position()

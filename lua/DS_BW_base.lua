@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.0.2"
-	DS_BW.version_num = 1.02
+	DS_BW.version = "1.0.3"
+	DS_BW.version_num = 1.03
 	DS_BW.settings = {
 		-- info msg
 		skills_showcase = 2,

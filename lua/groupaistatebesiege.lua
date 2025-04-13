@@ -157,7 +157,7 @@ function GroupAIStateBesiege:apply_DS_BW_dmg_reduction_loop()
 		if not is_boss_unit_found then
 			DS_BW.Miniboss_info.is_alive = false
 			DS_BW.Miniboss_info.kill_counter = 0
-			if DS_BW.end_stats_header_printed then -- if bosses dissapear but we are at the game over screen, dont send messages
+			if not DS_BW.end_stats_header_printed then -- if bosses dissapear but we are at the game over screen, dont send messages
 				local dmg_resist_str = "50"
 				if Global.level_data and Global.level_data.level_id == "mad" then
 					dmg_resist_str = "75"
