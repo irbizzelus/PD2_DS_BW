@@ -389,7 +389,7 @@ if not DS_BW.HotspotLogic then
 					"disassemble_turret",
 				}
 				if not table.contains(ignored_interacts, int_str) then
-					log("[DS_BW] Unknown hotspot interaction: '"..interaction.."'")
+					--log("[DS_BW] Unknown hotspot interaction: '"..interaction.."'")
 				end
 				----------------- debug
 				return 0
@@ -406,6 +406,37 @@ if not DS_BW.HotspotLogic then
 		if tblsize(self.HotSpotList) >= 1 then
 			for hotspotID, hotspotData in pairs(self.HotSpotList) do
 				if mvector3.distance(coords, hotspotData._location) <= self._hotSpotRadius then
+					
+					-- before exiting hotspot adding logic, we can add some heat to an allready existing hotspot at close location.
+					-- only do that for objective stuff tho
+					local obj_interacts = {
+						drill = 200,
+						drill_jammed = 200,
+						drill_upgrade = 200,
+						gen_pku_saw = 60, -- no mercy (at least, maybe more heists?) saw - pick up
+						gen_int_saw = 200, -- install
+						gen_int_saw_jammed = 200, -- repair
+						apartment_saw = 200, -- panic room. also green bridge trucks cuz asset reusage is pretty good
+						security_station_keyboard = 60, -- computer hack
+						hold_take_sample = 120, -- nmh
+						lance = 200, -- drill but different
+						lance_jammed = 200,
+						lance_upgrade = 200,
+						hack_ship_control = 120, -- bomb dockyard
+						hack_suburbia_outline = 160, -- pc hack, seems to be multi-heist
+						hack_suburbia_jammed_y = 160,
+						hold_circle_cutter = 90, -- brookln bank and (probably) alesso saws
+						circle_cutter_jammed = 90,
+						mcm_laptop = 120,
+						hold_add_compound_a = 160,
+						hold_add_compound_b = 160,
+						hold_add_compound_c = 160,
+						hold_add_compound_d = 160,
+					}
+					if obj_interacts[tostring(interaction)] then
+						hotspotData._heat = hotspotData._heat + (obj_interacts[tostring(interaction)] or 0)
+					end
+					
 					return
 				end
 			end

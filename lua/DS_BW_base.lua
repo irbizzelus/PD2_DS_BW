@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.0.3"
-	DS_BW.version_num = 1.03
+	DS_BW.version = "1.0.4"
+	DS_BW.version_num = 1.03 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- info msg
 		skills_showcase = 2,
@@ -450,5 +450,14 @@ if not DS_BW then
 		else
 			DS_BW.players[peer_id].hours_shown = true
 		end
+	end
+	
+	-- since blt is so nice and only disables mods on restart, continiuosly re-disable this piece of shit after it was found, so that ngbto users can't re-enable the mod by restarting their game
+	-- hopefuly ngbto users can read, and will process the warning pop up in the main menu
+	function DS_BW:yoink_ngbto()
+		DelayedCalls:Add("DS_BW_fuckoffngbto", 1, function()
+			BLT.Mods:GetModByName("Newbies go back to overkill"):SetEnabled(false, true)
+			DS_BW:yoink_ngbto()
+		end)
 	end
 end

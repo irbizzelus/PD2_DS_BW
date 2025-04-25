@@ -113,19 +113,15 @@ Hooks:PostHook(MenuManager, "_node_selected", "DS_BW:Node", function(self, menu_
 				requested_mods_2 = false
 			}
 		end
-		-- clear and warn about NGBTO incompatibility
-		if NoobJoin then
-			local plyrs = deep_clone(NoobJoin.Players)
-			NoobJoin = {}
-			NoobJoin.Players = plyrs
-			function NoobJoin:Show_Update_message()
-				DelayedCalls:Add("DS_BW_show_NGBTO_warning", 0.3, function()
-					local menu_options = {}
-					menu_options[1] = {text = "Ok", is_cancel_button = true}
-					local menu = QuickMenu:new("Death Sentence, but Worse.", "DS_BW is incompatible with NGBTO (newbies go back to overkill) and will cause crashes mid game. Remove NGBTO to avoid crashes and this message.\n\nIf you want to limit access to your lobby use TDLQ's 'Lobby settings' mod. You can find it on their web site, NOT modworkshop.", menu_options)
-					menu:Show()
-				end)
-			end
+		-- disable and warn about NGBTO incompatibility
+		if NoobJoin or BLT.Mods:GetModByName("Newbies go back to overkill") then
+			DelayedCalls:Add("DS_BW_show_NGBTO_warning", 2, function()
+				local menu_options = {}
+				menu_options[1] = {text = "Ok", is_cancel_button = true}
+				local menu = QuickMenu:new("Death Sentence, but Worse.", "DSBW is incompatible with NGBTO (newbies go back to overkill) and will not allow for NGBTO to work. Uninstall NGBTO if you want to use DSBW without seeing this message.\n\nIf you want to limit access to your lobby use TDLQ's 'Lobby settings' mod. You can find it on their web site, NOT modworkshop.", menu_options)
+				menu:Show()
+				DS_BW:yoink_ngbto()
+			end)
 		end
 	end
 	if type(node) == "table" and node._parameters.menu_id == "DS_BWmenu" then

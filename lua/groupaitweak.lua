@@ -1257,13 +1257,10 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 	
 	end
 	
-	-- crashes NGBTO if host runs it and somehow manages to get into a match. This mod is for assholes/elitists, so screw them
-	-- if you are reading this and disagree look up 'Lobby settings' by TDLQ, or fuck off :)
-	DelayedCalls:Add("DS_BW_clear_NGBTO", 10, function()
-		if NoobJoin then
-			NoobJoin = {}
-		end
-	end)	
+	-- ingame check
+	if NoobJoin or BLT.Mods:GetModByName("Newbies go back to overkill") then
+		DS_BW:yoink_ngbto()
+	end
 end)
 
 function GroupAITweakData:_init_enemy_spawn_groups_level(tweak_data, difficulty_index)

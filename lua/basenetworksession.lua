@@ -40,7 +40,7 @@ Hooks:PostHook(BaseNetworkSession, "on_statistics_recieved", "DS_BW_endgamestats
 	-- same as above, but print actual numerical values that we have for each existing player
 	DelayedCalls:Add("DS_BW_endStatsForPeer_"..tostring(peer_id) , 1.25, function()
 		if DS_BW.settings.endstats_enabled and not DWP then
-			local peer = managers.network:session():peer(peer_id)
+			local peer = managers.network and managers.network:session() and managers.network:session():peer(peer_id)
 			if peer and peer:has_statistics() then
 				local specials = ""
 				local headshoots = ""

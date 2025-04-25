@@ -9,7 +9,7 @@ local DS_BW_flashbang_roll_tracker = {}
 local orig_update = QuickFlashGrenade.update
 function QuickFlashGrenade:update(unit, t, dt)
 	
-	if Network and Network:is_client() then
+	if (Network and not Network:is_server()) or (Network:is_server() and not DS_BW.DS_difficultycheck) then
 		orig_update(self, unit, t, dt)
 		return
 	end
