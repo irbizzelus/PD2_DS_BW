@@ -4,7 +4,7 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.0.4"
+	DS_BW.version = "1.0.5"
 	DS_BW.version_num = 1.03 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- info msg
@@ -220,7 +220,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = "1.0.2 release\n\nWelcome to DSBW!\n\nWhenever a big enough update for this mod is published in the future, this pop-up window will let you know of most important changes.\nMinor updates and bug fixes most likely will not appear here, but if you would like to know what was changed, you can always do so in options->mod options->DSBW->patch notes.\n\nGood luck and have fun!"
+				local message = tostring(DS_BW.version).."\n\nWelcome to DSBW!\n\nWhenever a big enough update for this mod is published in the future, this pop-up window will let you know of most important changes.\nMinor updates and bug fixes most likely will not appear here, but if you would like to know what was changed, you can always do so in options->mod options->DSBW->patch notes.\n\nGood luck and have fun!"
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num

@@ -1,7 +1,7 @@
 {
     "name": "Death Sentence, but Worse.",
     "description": "Modifies Death Sentence difficulty to make it harder.",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "author": "irbizzelus",
     "contact": "Steam profile link is on my modworkshop account",
 	"image" : "DS_BW.dds",

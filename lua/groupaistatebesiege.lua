@@ -12,6 +12,7 @@ Hooks:PostHook(GroupAIStateBesiege, "init", "DS_BW_spawngroups", function(self)
 	self._MAX_SIMULTANEOUS_SPAWNS = 2
 end)
 
+local assault_task_updates = 0
 Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", function(self, ...)
 	
 	if not DS_BW.DS_difficultycheck then
@@ -19,14 +20,19 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 	end
 	
 	if self._spawning_groups and #self._spawning_groups >= 1 then
+		assault_task_updates = assault_task_updates + 1
 		for i=1, #self._spawning_groups do
 			for _, sp in ipairs(self._spawning_groups[i].spawn_group.spawn_pts) do
 				-- if cuurent phase is fade or regroup (for some reason its just nil nowadays) force longer respawn times
 				-- by setting spawn delay on enemy spawn points every function trigger
 				
-				-- clear (or create) the table every time new tank squad spawns in, because sometiems heists may make certain spawn points inactive
+				-- clear the table every few squad spawns, because sometiems heists may make certain spawn points inactive
 				-- like when you move through heat streat for example, spawns at the begining should no longer be active
-				DS_BW.Miniboss_info.spawn_locations = {}
+				if assault_task_updates >= 15 then
+					assault_task_updates = 0
+					DS_BW.Miniboss_info.spawn_locations = {}
+				end
+				-- add latest used spawn poistions, without dupes
 				for j=1, #self._spawning_groups[i].spawn_group.spawn_pts do
 					if not table.contains(DS_BW.Miniboss_info.spawn_locations, self._spawning_groups[i].spawn_group.spawn_pts[j].pos) then
 						table.insert(DS_BW.Miniboss_info.spawn_locations,self._spawning_groups[i].spawn_group.spawn_pts[j].pos)

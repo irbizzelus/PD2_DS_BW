@@ -135,24 +135,28 @@ function GroupAIStateBase:set_difficulty(value)
 		
 	else -- wave 2 and onward
 		if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
-			-- miniboss has a 66.6% chance to spawn on first first full wave and then 100% on 3rd wave and onwards
-			local boss_spawn_chance = 0.666
-			local is_boss_roll_successful = math.random() <= boss_spawn_chance
+			-- miniboss has a 33.3% chance to spawn on first first full wave, 66.6% on 2nd, and then 100% on 3rd wave and onwards
+			local is_boss_1st_roll_successful = math.random() <= 0.333
+			local is_boss_2nd_roll_successful = math.random() <= 0.666
 			
 			local function is_boss_spawn_allowed()
 				local res = false
 				if self._assault_number == 1 and self._hunt_mode then -- first endless assault always true
 					res = true
-				elseif is_heist_without_1st_assault then -- otherwise check for fast heist, and make it gamble over assault 1
-					if self._assault_number == 1 and is_boss_roll_successful then
+				elseif is_heist_without_1st_assault then -- otherwise check for fast heist, and make it begin to gamble on 1st assault
+					if self._assault_number == 1 and is_boss_1st_roll_successful then
 						res = true
-					elseif self._assault_number >= 2 then
-						res = true
-					end
-				else -- or 2 if its a standard heist
-					if self._assault_number == 2 and is_boss_roll_successful then
+					elseif self._assault_number == 2 and is_boss_2nd_roll_successful then
 						res = true
 					elseif self._assault_number >= 3 then
+						res = true
+					end
+				else -- if its a standard heist we start to gamble at 2
+					if self._assault_number == 2 and is_boss_1st_roll_successful then
+						res = true
+					elseif self._assault_number == 3 and is_boss_2nd_roll_successful then
+						res = true
+					elseif self._assault_number >= 4 then
 						res = true
 					end
 				end
@@ -160,7 +164,7 @@ function GroupAIStateBase:set_difficulty(value)
 			end
 			
 			if is_boss_spawn_allowed() then
-				DelayedCalls:Add("DS_BW_add_mid_wave_boss", math.random(45,60), function()
+				DelayedCalls:Add("DS_BW_add_mid_wave_boss", math.random(20,35), function()
 					if DS_BW.Miniboss_info.spawn_locations and #DS_BW.Miniboss_info.spawn_locations >= 1 then
 						
 						-- when boss is spawning, choose a random alive player, select an availabe boss spawn point closet to said player, and spawn the boss there
