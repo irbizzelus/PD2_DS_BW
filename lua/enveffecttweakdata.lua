@@ -4,7 +4,6 @@ function EnvEffectTweakData:incendiary_fire()
 	local result = DS_BW_orig_incendiary_fire(self)
 	
 	if DS_BW and DS_BW.DS_difficultycheck and DS_BW._creating_fire_trap then
-		result.player_damage = DS_BW._creating_fire_trap
 		result.burn_duration = 0
 		result.damage = -0.69
 		DS_BW._creating_fire_trap = nil

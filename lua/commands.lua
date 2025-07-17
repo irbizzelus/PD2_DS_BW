@@ -20,7 +20,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("ecm", {
 		callback = function(sender)
-			local msg = "All specials and light/heavy swat units are immune to the ECM feedback. Normal cops and gangsters can still be stunned. You can still receive 20% dodge upon a kill with Hacker's pocket ECM, even if enemies are not visually stunned from ECM feedback."
+			local msg = "All enemies now only have a 18% chance to get stunned by the ECM feedback (instead of 80%-100%), and the stun duration is also shorter. All of Hacker's bonuses you get while PECM is active can still be received even if enemies are not visually stunned."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else
@@ -31,7 +31,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("dmg", {
 		callback = function(sender)
-			local msg = "All enemies receive 50% less damage then usual, which means you need twice the bullets to kill them. This effect is copied from Cpt.Winter's buff and can not be disabled in any way. To compensate, amount of enemies was reduced."
+			local msg = "All enemies receive 50% less damage than usual, which means you need twice the bullets to kill them. This effect is copied from Cpt.Winter's buff and can not be disabled in any way. To compensate, amount of enemies was reduced."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else
@@ -42,7 +42,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("flash", {
 		callback = function(sender)
-			local msg = "Flashbangs will detonate 3 times as quickly. If not successfully destroyed, there is a 40% chance for the flashbang to be replaced by a small but highly damaging fire field, 40% chance for a medium damaging gas grenade, or it may just remain as flashbang."
+			local msg = "Flashbang detonates 3 times as quickly. If it's not destroyed, there is a 45% chance for the flashbang to create a fire field, 22.5% chance for it to explode, and a 7.5% chance for it to create a much deadlier explosion. Or it may just remain a flashbang."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else

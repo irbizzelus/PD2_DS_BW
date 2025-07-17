@@ -15,6 +15,28 @@ function CopMovement:action_request(action_desc)
 	return ds_bw_action_request_orig(self,action_desc)
 end
 
+function DS_BW.highlight_medics_when_boss_is_active(npc)
+	if not npc then
+		return
+	end
+	if not alive(npc._unit) then
+		return
+	end
+	-- this one stops highlight loop if enemy is dead, since alive func above checks if unit itself is alive, and a dead body is still an alive unit
+	if not npc:can_request_actions() then
+		return
+	end
+	
+	npc._unit:contour():add( "mark_enemy_damage_bonus_distance" , true )
+	
+	-- loop highlight addition every 2 seconds
+	DelayedCalls:Add("ContinueHighlightForSniper_"..tostring(npc._unit:id()), 2, function()
+		if DS_BW and DS_BW.Miniboss_info.is_alive then
+			DS_BW.highlight_medics_when_boss_is_active(npc)
+		end
+	end)
+end
+
 -- whenver miniboss becomes active, highlight all medic units on the level to try to minimize frustrations with bossess getting healed, since i dont want to make them un-healable
 Hooks:PostHook(CopMovement, "action_request", "DS_BW_add_medic_highlight_for_boss" , function(self,action_desc)
 	
@@ -39,11 +61,7 @@ Hooks:PostHook(CopMovement, "action_request", "DS_BW_add_medic_highlight_for_bos
 	-- highlight itself looks like a standard red highlight without damage skills, but it doesnt decay after a few seconds and stays on forever.
 	if DS_BW.Miniboss_info.is_alive then
 		if self._unit:base() and self._unit:base():char_tweak() and self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "medic") then
-			self._unit:contour():add("vulnerable_character", true)
-		end
-	else
-		if self._unit:base() and self._unit:base():char_tweak() and self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "medic") then
-			self._unit:contour():remove("vulnerable_character", true)
+			DS_BW.highlight_medics_when_boss_is_active(self)
 		end
 	end
 	

@@ -164,7 +164,7 @@ function GroupAIStateBase:set_difficulty(value)
 			end
 			
 			if is_boss_spawn_allowed() then
-				DelayedCalls:Add("DS_BW_add_mid_wave_boss", math.random(20,35), function()
+				DelayedCalls:Add("DS_BW_add_mid_wave_boss", math.random(16,28), function()
 					if DS_BW.Miniboss_info.spawn_locations and #DS_BW.Miniboss_info.spawn_locations >= 1 then
 						
 						-- when boss is spawning, choose a random alive player, select an availabe boss spawn point closet to said player, and spawn the boss there
@@ -185,12 +185,65 @@ function GroupAIStateBase:set_difficulty(value)
 						if #alive_player_positions >= 1 then
 							chosen_player = math.floor(math.random(1,#alive_player_positions))
 							local chosen_player_coords = alive_player_positions[chosen_player].pos -- math.random(1,4) should never have decimals values
-							local lowest_distance = 999999
-							for j=1, #DS_BW.Miniboss_info.spawn_locations do
-								local dist = mvector3.distance(chosen_player_coords, DS_BW.Miniboss_info.spawn_locations[j])
-								if dist < lowest_distance then
-									lowest_distance = dist
-									boss_spawn_point = DS_BW.Miniboss_info.spawn_locations[j]
+							local chosen_player_unit = managers.network:session():peer(alive_player_positions[chosen_player].id):unit()
+							local enemies = World:find_units_quick(chosen_player_unit, "sphere", alive_player_positions[chosen_player].pos, 4000, managers.slot:get_mask("enemies"))
+							local boss_position_found = false
+							
+							-- try to find enemy special units around chosen player spawn, to spawn boss at that location, to hopefuly prevent bosses from getting stuck
+							-- if no such enemy was found, fall back to original spawn point logic
+							if enemies and #enemies > 0 then
+								local specials_found = {}
+								for i, enemy in pairs(enemies) do
+									local enemy_chartweak = enemy:base():char_tweak()
+									if enemy_chartweak.access == "tank" then
+										if mvector3.distance(alive_player_positions[chosen_player].pos, enemy:position()) >= 1200 then -- only allow to spawn if we are at least 12m away
+											specials_found.tank = specials_found.tank or {}
+											table.insert(specials_found.tank, enemy:position())
+										end
+									end
+									if enemy_chartweak.access == "shield" then
+										if mvector3.distance(alive_player_positions[chosen_player].pos, enemy:position()) >= 1200 then
+											specials_found.shield = specials_found.shield or {}
+											table.insert(specials_found.shield, enemy:position())
+										end
+									end
+									if enemy_chartweak.access == "spooc" then
+										if mvector3.distance(alive_player_positions[chosen_player].pos, enemy:position()) >= 1200 then
+											specials_found.spooc = specials_found.spooc or {}
+											table.insert(specials_found.spooc, enemy:position())
+										end
+									end
+									if enemy_chartweak.access == "taser" then
+										if mvector3.distance(alive_player_positions[chosen_player].pos, enemy:position()) >= 1200 then
+											specials_found.taser = specials_found.taser or {}
+											table.insert(specials_found.taser, enemy:position())
+										end
+									end
+								end
+								if specials_found.tank then
+									boss_spawn_point = specials_found.tank[math.random(1,#specials_found.tank)]
+									boss_position_found = true
+								elseif specials_found.taser then
+									boss_spawn_point = specials_found.taser[math.random(1,#specials_found.taser)]
+									boss_position_found = true
+								elseif specials_found.shield then
+									boss_spawn_point = specials_found.shield[math.random(1,#specials_found.shield)]
+									boss_position_found = true
+								elseif specials_found.spooc then
+									boss_spawn_point = specials_found.spooc[math.random(1,#specials_found.spooc)]
+									boss_position_found = true
+								end
+							end
+							
+							-- default to old spawn point logic, if new one fails to find a spot
+							if not boss_position_found then
+								local lowest_distance = 999999
+									for j=1, #DS_BW.Miniboss_info.spawn_locations do
+									local dist = mvector3.distance(chosen_player_coords, DS_BW.Miniboss_info.spawn_locations[j])
+									if dist < lowest_distance then
+										lowest_distance = dist
+										boss_spawn_point = DS_BW.Miniboss_info.spawn_locations[j]
+									end
 								end
 							end
 						end
@@ -199,81 +252,86 @@ function GroupAIStateBase:set_difficulty(value)
 						local team = managers.groupai:state()._teams[tweak_data.levels:get_default_team_ID("combatant")]
 						-- "highlight_character" - old
 						local highlight_str = "generic_interactable_selected" -- all possible working options: "generic_interactable" - yellow; "generic_interactable_selected" - white; "vulnerable_character" - basic red
-						local spawned_boss_1 = World:spawn_unit(unit_str, boss_spawn_point, Rotation(180 - (360 / 10) * 1, 0, 0))
+						-- add a tiny adjustment to their spawn position to avoid them getting stuck in each other
+						local new_boss_spawn_point = Vector3(boss_spawn_point.x + math.random(), boss_spawn_point.y + math.random(), boss_spawn_point.z)
+						local spawned_boss_1 = World:spawn_unit(unit_str, new_boss_spawn_point, Rotation(180 - (360 / 10) * 1, 0, 0))
 						spawned_boss_1:movement():set_team(team)
+						spawned_boss_1:brain():set_logic("attack")
 						spawned_boss_1:contour():add(highlight_str , true)
-						local spawned_boss_2 = World:spawn_unit(unit_str, boss_spawn_point, Rotation(180 - (360 / 10) * 1, 0, 0))
-						spawned_boss_2:movement():set_team(team)
-						spawned_boss_2:contour():add(highlight_str , true)
-						
-						if spawned_boss_1 and spawned_boss_2 and alive(spawned_boss_1) and alive(spawned_boss_2) then
-							if Utils:IsInGameState() and not DS_BW.end_stats_header_printed and self._task_data and self._task_data.assault and self._task_data.assault.phase == "sustain" then
-								
-								DS_BW.Miniboss_info.is_alive = true
-								
-								local dmg_resist_str = "66.6"
-								if Global.level_data and Global.level_data.level_id == "mad" then
-									dmg_resist_str = "80"
-								end
-								
-								-- only put full chat messages for first 2 appearances
-								if DS_BW.Miniboss_info.appearances == 0 then
-									DS_BW.CM:public_chat_message("[DS_BW] A new foe has appeared. Enemy damage resistance was increased to "..dmg_resist_str.."% until your foe is defeated. x_x")
-									DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
-								elseif DS_BW.Miniboss_info.appearances == 1 then
-									DS_BW.CM:public_chat_message("[DS_BW] Devil duo has returned. "..dmg_resist_str.."% damage resistance is back x_x")
-									DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
-								elseif DS_BW.Miniboss_info.appearances >= 2 then
-									DS_BW.CM:public_chat_message("[DS_BW] x_x")
-									DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
-								end
-								
-								-- make bosses attack chosen player's position.
-								local target_id = alive_player_positions[chosen_player].id
-								local target_loc = false
-								if target_id == 1 and managers.player and managers.player:player_unit() and alive(managers.player:player_unit()) then
-									target_loc = managers.player:player_unit():position()
-								else
-									local peer = managers.network and managers.network:session() and managers.network:session():peer(target_id)
-									local unit = peer and peer:unit() or nil
-									if (unit and alive(unit)) then
-										target_loc = unit:position()
-										target_id = i
+						-- spawn second boss with a tiny delay to avoid some potential spawn issues
+						DelayedCalls:Add("DS_BW_add_2nd_mid_wave_boss", 0.34, function()
+							new_boss_spawn_point = Vector3(boss_spawn_point.x - math.random(), boss_spawn_point.y - math.random(), boss_spawn_point.z)
+							local spawned_boss_2 = World:spawn_unit(unit_str, boss_spawn_point, Rotation(180 - (360 / 10) * 1, 0, 0))
+							spawned_boss_2:movement():set_team(team)
+							spawned_boss_2:brain():set_logic("attack")
+							spawned_boss_2:contour():add(highlight_str , true)
+							if spawned_boss_1 and spawned_boss_2 and alive(spawned_boss_1) and alive(spawned_boss_2) then
+								if Utils:IsInGameState() and not DS_BW.end_stats_header_printed and self._task_data and self._task_data.assault and self._task_data.assault.phase == "sustain" then
+									
+									DS_BW.Miniboss_info.is_alive = true
+									
+									local dmg_resist_str = "66.6"
+									if Global.level_data and Global.level_data.level_id == "mad" then
+										dmg_resist_str = "80"
 									end
-									-- backup
-									if not target_loc then
-										for i=2,4 do
-											local peer = managers.network and managers.network:session() and managers.network:session():peer(i)
-											local unit = peer and peer:unit() or nil
-											if (unit and alive(unit)) then
-												target_loc = unit:position()
-												target_id = i
-												break
+									
+									-- only put full chat messages for first 2 appearances
+									if DS_BW.Miniboss_info.appearances == 0 then
+										DS_BW.CM:public_chat_message("[DS_BW] A new foe has appeared. Enemy damage resistance was increased to "..dmg_resist_str.."% until your foe is defeated. x_x")
+										DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
+									elseif DS_BW.Miniboss_info.appearances == 1 then
+										DS_BW.CM:public_chat_message("[DS_BW] Devil duo has returned. "..dmg_resist_str.."% damage resistance is back x_x")
+										DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
+									elseif DS_BW.Miniboss_info.appearances >= 2 then
+										DS_BW.CM:public_chat_message("[DS_BW] x_x")
+										DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
+									end
+									
+									-- make bosses attack chosen player's position.
+									local target_id = alive_player_positions[chosen_player].id
+									local target_loc = false
+									if target_id == 1 and managers.player and managers.player:player_unit() and alive(managers.player:player_unit()) then
+										target_loc = managers.player:player_unit():position()
+									else
+										local peer = managers.network and managers.network:session() and managers.network:session():peer(target_id)
+										local unit = peer and peer:unit() or nil
+										if (unit and alive(unit)) then
+											target_loc = unit:position()
+											target_id = i
+										end
+										-- backup
+										if not target_loc then
+											for i=2,4 do
+												local peer = managers.network and managers.network:session() and managers.network:session():peer(i)
+												local unit = peer and peer:unit() or nil
+												if (unit and alive(unit)) then
+													target_loc = unit:position()
+													target_id = i
+													break
+												end
 											end
 										end
 									end
+									if target_loc then
+										local tracker = managers.navigation:create_nav_tracker(target_loc)
+										local fin_attack_pos = mvector3.copy(tracker:lost() and tracker:field_position() or tracker:position())
+										managers.navigation:destroy_nav_tracker(tracker)
+										local objective = {
+											type = "free",
+											haste = "run",
+											pose = "stand",
+											nav_seg = managers.navigation:get_nav_seg_from_pos(fin_attack_pos, true),
+											pos = mvector3.copy(fin_attack_pos),
+											forced = true,
+											important = true
+										}
+										spawned_boss_1:brain():set_objective(objective)
+										spawned_boss_2:brain():set_objective(objective)
+									end
+									self:DS_BW_update_boss_logic(spawned_boss_1,spawned_boss_2,target_id)
 								end
-								if target_loc then
-									local tracker = managers.navigation:create_nav_tracker(target_loc)
-									local fin_attack_pos = mvector3.copy(tracker:lost() and tracker:field_position() or tracker:position())
-									managers.navigation:destroy_nav_tracker(tracker)
-									local objective = {
-										type = "free",
-										haste = "run",
-										pose = "stand",
-										nav_seg = managers.navigation:get_nav_seg_from_pos(fin_attack_pos, true),
-										pos = mvector3.copy(fin_attack_pos),
-										forced = true,
-										important = true
-									}
-									spawned_boss_1:brain():set_objective(objective)
-									spawned_boss_1:brain():set_logic("attack")
-									spawned_boss_2:brain():set_objective(objective)
-									spawned_boss_2:brain():set_logic("attack")
-								end
-								self:DS_BW_update_boss_logic(spawned_boss_1,spawned_boss_2,target_id)
 							end
-						end
+						end)
 					end
 				end)
 			end

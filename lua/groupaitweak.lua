@@ -1431,13 +1431,13 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		},
 		tac_bull_rush = { -- Squad_Tank
 			0,
-			0.065,
-			0.14
+			0.05,
+			0.08
 		},
 		Squad_Tank_Annoying = {
 			0,
 			0,
-			0.12
+			0.07
 		},
 		FBI_spoocs = {
 			0,

@@ -1,7 +1,7 @@
 -- make sure that enemies and civs dont take damage from flashbang firetrap @170
 -- unfortunately has to be a function override because it normaly doesnt provide all needed info 
 -- to the character_damage():damage_fire function that needs said info to differentiate player fired fire nades from firetrap creations
-function FireManager:detect_and_give_dmg(params)
+Hooks:OverrideFunction(FireManager, "detect_and_give_dmg", function (self, params)
 	local hit_pos = params.hit_pos
 	local slotmask = params.collision_slotmask
 	local user_unit = params.user
@@ -239,4 +239,4 @@ function FireManager:detect_and_give_dmg(params)
 	end
 
 	return hit_units, splinters, results
-end
+end)

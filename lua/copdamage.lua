@@ -12,7 +12,7 @@ Hooks:PreHook(CopDamage, "die", "DS_BW_miniboss_deathtracker", function(self,att
 	
 	-- try to clear medic's red highlight from miniboss's phase on death. doesnt work for some reason, need to test further
 	if self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "medic") then
-		self._unit:contour():remove("vulnerable_character", true)
+		self._unit:contour():remove("mark_enemy_damage_bonus_distance", true)
 	end
 	
 	if self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "DS_BW_tag_miniboss") then

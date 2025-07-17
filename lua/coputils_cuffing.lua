@@ -236,9 +236,11 @@ if not DS_BW.CopUtils then
 								if not world_geometry_raycast then
 									local enemy_chartweak = enemy:base():char_tweak()
 									if enemy_chartweak.access ~= "gangster" then
-										player_unit:movement():on_cuffed()
-										enemy:sound():say("i03", true, false)
-										return
+										if Application:time() > DS_BW.CopUtils.allowed_cuffing_time[managers.network:session():peer_by_unit(player_unit):id()] then
+											player_unit:movement():on_cuffed()
+											enemy:sound():say("i03", true, false)
+											return
+										end
 									end
 								end
 							end
