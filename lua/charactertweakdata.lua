@@ -9,7 +9,6 @@ Hooks:PostHook(CharacterTweakData, "_set_sm_wish", "DS_BW_remove_ECM_bullshit", 
 		"tank",
 		"tank_medic",
 		"tank_mini",
-		"tank_hw",
 		"swat",
 		"fbi_swat",
 		"city_swat",
@@ -39,18 +38,15 @@ Hooks:PostHook(CharacterTweakData, "_set_sm_wish", "DS_BW_remove_ECM_bullshit", 
 		end
 	end
 	
+	-- miniboss has weakness to ECM's to make hacker a viable supportive perk option, since its not as good against standard units otherwise
+	self.tank_hw.ecm_vulnerability = 0.99
+	if self.tank_hw.ecm_hurts and self.tank_hw.ecm_hurts.ears then
+		self.tank_hw.ecm_hurts.ears = 3
+	end
+	
 	-- used for enemy type tracking in other parts of the mod
 	table.insert(self.tank_hw.tags, "DS_BW_tag_miniboss")
 	table.insert(self.phalanx_minion.tags, "DS_BW_tag_reinforced_shield")
+	table.insert(self.phalanx_vip.tags, "DS_BW_tag_reinforced_shield_VIP")
 	
-end)
-
--- Make winters no longer invincible, cause bugged out infinite assaults from him are annoying. This could help, if host kills him. Also people die when you shoot at them :)
-Hooks:PostHook(CharacterTweakData, "_init_phalanx_vip", "DS_BW_make_winters_killable", function(self, presets)
-	if not Network:is_server() then
-		return
-	end
-	
-	self.phalanx_vip.LOWER_HEALTH_PERCENTAGE_LIMIT = nil
-	self.phalanx_vip.FINAL_LOWER_HEALTH_PERCENTAGE_LIMIT = nil
 end)

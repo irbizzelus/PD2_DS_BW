@@ -3,11 +3,11 @@ if not DS_BW then
 end
 
 -- process send_message to activate chat commands if prefix exists in our message
-local orig_send = ChatManager.send_message
+local DSBW_orig_send = ChatManager.send_message
 function ChatManager:send_message(channel_id, sender, message)
 	-- channel 1 is text, others are network related
 	if channel_id ~= 1 then
-		orig_send(self, channel_id, sender, message)
+		DSBW_orig_send(self, channel_id, sender, message)
 		return
 	end
 	
@@ -32,11 +32,11 @@ function ChatManager:send_message(channel_id, sender, message)
 		end
 	end
 
-	orig_send(self, channel_id, sender, message)
+	DSBW_orig_send(self, channel_id, sender, message)
 end
 
 -- same check for messages from other peers/players
-local orig_receive = ChatManager.receive_message_by_peer
+local DSBW_orig_receive = ChatManager.receive_message_by_peer
 function ChatManager:receive_message_by_peer(channel_id, peer, message)
 	-- if host sends us a message starting with DS_BW_stats, we ignore it. why? to not have duplicated player info messages
 	-- this is legacy code at this point, since 2.5 these messages are always private
@@ -46,7 +46,7 @@ function ChatManager:receive_message_by_peer(channel_id, peer, message)
 			return
 		end
 	end
-	orig_receive(self, channel_id, peer, message)
+	DSBW_orig_receive(self, channel_id, peer, message)
 
 	-- proccessing requests if we are hosting
 	if DS_BW.CM and DS_BW.DS_difficultycheck then

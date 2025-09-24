@@ -102,6 +102,7 @@ end)
 Hooks:PostHook(MenuManager, "_node_selected", "DS_BW:Node", function(self, menu_name, node)
 	-- clear peer's vars if we quit to main menu
 	if type(node) == "table" and node._parameters.name == "main" then
+		DS_BW._is_client_in_DSBW_lobby = false
 		DS_BW:changelog_popup()
 		for i=1,4 do
 			DS_BW.players[i] = {

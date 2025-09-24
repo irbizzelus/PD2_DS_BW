@@ -1,12 +1,9 @@
--- Assault actually ends if Winters dies. Death added in chartweak
--- hopefuly completely fixes it
-local ds_bw_orig_phalanxVip_death_clbk = CopLogicPhalanxVip.death_clbk
-function CopLogicPhalanxVip.death_clbk(data, damage_info)
-	
-	if Network:is_server() then
+Hooks:PostHook(CopLogicPhalanxVip, "_chk_should_breakup", "DS_BW_PhalanxVip_chk_should_breakup_post", function(self)
+	local flee_health_ratio = tweak_data.group_ai.phalanx.vip.health_ratio_flee
+	local vip_health_ratio = self.unit:character_damage():health_ratio()
+
+	if vip_health_ratio <= flee_health_ratio then
 		managers.groupai:state():unregister_phalanx_vip()
 		managers.groupai:state():set_assault_endless(false)
 	end
-	
-	return ds_bw_orig_phalanxVip_death_clbk(self, data, damage_info)
-end
+end)

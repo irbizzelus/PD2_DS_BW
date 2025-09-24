@@ -7,6 +7,30 @@ DS_BW.CM.commands = {}
 
 if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
+	DS_BW.CM:add_command("commands", {
+		callback = function(sender)
+			local host_msg = "List of usable information related commands: /cops; /ecm; /dmg; /weapons; /flash; /cuffs; /dom; /assault. When used by host, these commands will be sent as a public message for everyone.\nAdditionaly you can use: /ammo; /meds; /rng."
+			local client_msg = "List of usable information related commands: /cops; /ecm; /dmg; /weapons; /flash; /cuffs; /dom; /assault. Additionaly you can use: /hostmods; /ammo; /meds; /rng."
+			if sender:id() ~= 1 then
+				DS_BW.CM:private_chat_message(sender:id(), client_msg)
+			else
+				DS_BW.CM:private_chat_message(sender:id(), host_msg)
+			end
+		end
+	})
+	
+	DS_BW.CM:add_command("help", {
+		callback = function(sender)
+			local host_msg = "You are running DSBW. You can use /commands for list of available commands. Oh, and dont be a dick to players who play with you :)"
+			local client_msg = "This lobby runs \"Death Sentence, but Worse\" mod which makes loud gameplay harder. If you want to get more information on changes made by this mod, you can request /commands, which will send you a private message with relevant information. GLHF!"
+			if sender:id() ~= 1 then
+				DS_BW.CM:private_chat_message(sender:id(), client_msg)
+			else
+				DS_BW.CM:private_chat_message(sender:id(), host_msg)
+			end
+		end
+	})
+	
 	DS_BW.CM:add_command("cops", {
 		callback = function(sender)
 			local msg = "Special enemies spawn more often. All enemies use harder hitting weapons. Bulldozers sometimes may use a stunning shotgun. Enemies will notice and try to defend objective areas and/or your deployables, after you interact with them."
@@ -31,14 +55,39 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("dmg", {
 		callback = function(sender)
-			local msg = "All enemies receive 50% less damage than usual, which means you need twice the bullets to kill them. This effect is copied from Cpt.Winter's buff and can not be disabled in any way. To compensate, amount of enemies was reduced."
+			local msg_1 = "If your performance was evaluated as \"too good\", you may start dealing less damage to all enemies. This debuff can be set to 20% (1.25x the bullets to kill) or 33% (1.5x the bullets to kill)."
+			local msg_2 = "This effect may be removed during your next performance evaluation, unless the automatic message from DS_BW says that this debuff is permanent. If a global damage resistance debuff is present, it will override your personal debuff."
+			DS_BW.CM:private_chat_message(sender:id(), msg_1)
+			DS_BW.CM:private_chat_message(sender:id(), msg_2)
+		end
+	})
+	
+	DS_BW.CM:add_command("weapons", {
+		callback = function(sender)
+			local msg_1 = "Heavy swat have 50% chance to use a 225-dmg rifle with no fall off, 17% chance to use a 150-dmg rifle with no fall off, 17% chance for a 325-dmg shotgun with fall off, and 17% chance for a 80-dmg LMG with fall off."
+			local msg_2 = "Light swat have 50% chance to use a 67.5-dmg SMG with no fall off, 33% chance for a 150-dmg rifle with no fall off, and 17% chance for a 525-dmg shotgun with fall off."
+			local msg_3 = "Most special units use weapons with slightly higher damage. All bulldozer types now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect."
+			if Global and Global.level_data and Global.level_data.level_id == "mad" then
+				msg_1 = "Heavy swat was replaced with a super light unit who has a 40% chance to use a 225-dmg rifle with no fall off, 40% chance to use a 375-dmg rifle with no fall off, and 20% chance for a 525-dmg shotgun with fall off."
+				msg_2 = "Light swat was replaced with a heavy unit who has a 50% chance to use a 80-dmg minigun with fall off or a 50% chance for a 100-dmg rifle with no fall off."
+				msg_3 = "Most special units use weapons with slightly higher damage. All bulldozer types now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect."
+			end
 			if sender:id() ~= 1 then
-				DS_BW.CM:private_chat_message(sender:id(), msg)
+				DS_BW.CM:private_chat_message(sender:id(), msg_1)
+				DS_BW.CM:private_chat_message(sender:id(), msg_2)
+				DS_BW.CM:private_chat_message(sender:id(), msg_3)
 			else
-				DS_BW.CM:public_chat_message(msg)
+				DS_BW.CM:public_chat_message(msg_1)
+				DS_BW.CM:public_chat_message(msg_2)
+				DS_BW.CM:public_chat_message(msg_3)
 			end
 		end
 	})
+	
+	-- re-route to an existing command
+	DS_BW.CM:add_command("weapon", {callback = function(sender)
+		DS_BW.CM.commands["weapons"].callback(sender)
+	end})
 	
 	DS_BW.CM:add_command("flash", {
 		callback = function(sender)
@@ -164,18 +213,61 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("rng", {
 		callback = function(sender)
-			local am_angry = math.random() <= 0.2
-			if am_angry then
-				local peer = managers.network and managers.network:session() and managers.network:session():peer(sender:id())
-				local unit = peer and peer:unit() or nil
-				if (unit and alive(unit)) then
-					DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get cuffed.")
-					unit:movement():on_cuffed()
+			DS_BW.CM.rng_command_cooldowns = DS_BW.CM.rng_command_cooldowns or {-60,-60,-60,-60}
+			if DS_BW.CM.rng_command_cooldowns[sender:id()] + 90 < Application:time() then
+				DS_BW.CM.rng_command_cooldowns[sender:id()] = Application:time()
+				local am_angry = math.random() <= 0.2
+				if am_angry then
+					local peer = managers.network and managers.network:session() and managers.network:session():peer(sender:id())
+					local unit = peer and peer:unit() or nil
+					if (unit and alive(unit)) then
+						DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get cuffed.")
+						unit:movement():on_cuffed()
+					else
+						DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get a job.")
+					end
 				else
-					DS_BW.CM:public_chat_message("RNG command is tired of your shit "..sender:name()..", get a job.")
+					DS_BW.CM:public_chat_message(gibberish[math.random(1,33)])
 				end
 			else
-				DS_BW.CM:public_chat_message(gibberish[math.random(1,33)])
+				DS_BW.CM:private_chat_message(sender:id(), "RNG command is on cooldown for you.")
+			end
+		end
+	})
+	
+	DS_BW.CM:add_command("med", {
+		in_game_only = true,
+		callback = function(sender)
+			local msg = " needs a MEDIC bag! Help your teammate!"
+			if sender:name() then
+				if sender:id() == 1 then
+					DS_BW.CM:public_chat_message(msg)
+				else
+					DS_BW.CM:public_chat_message(sender:name()..msg)
+				end
+			else
+				DS_BW.CM:public_chat_message("Someone"..msg)
+			end
+		end
+	})
+	
+	-- re-route to an existing command
+	DS_BW.CM:add_command("doc", {callback = function(sender)
+		DS_BW.CM.commands["med"].callback(sender)
+	end})
+
+	DS_BW.CM:add_command("ammo", {
+		in_game_only = true,
+		callback = function(sender)
+			local msg = " needs AMMO! Help your teammate!"
+			if sender:name() then
+				if sender:id() == 1 then
+					DS_BW.CM:public_chat_message(msg)
+				else
+					DS_BW.CM:public_chat_message(sender:name()..msg)
+				end
+			else
+				DS_BW.CM:public_chat_message("Someone"..msg)
 			end
 		end
 	})

@@ -8,7 +8,7 @@ if not DS_BW.HotspotLogic then
 		_updates_delay = 4, -- update cycle delay in secs
 		_last_spot_id = 1, -- each spot has it's own id, keep track of latest for new id evaluation
 		_hotSpotRadius = 650, -- used for collision checks when adding new hotspots, and for distance check for players within hotspot radius
-		_maxCopsPerHotSpot = 5, -- at least a 3
+		_maxCopsPerHotSpot = 6, -- at least a 3
 		Defense_positions = {
 			-- note: due to the way spiral formation is caclulating next position, make sure that maxrange/minrange returns a whole number, to avoid issues. also both numbers need to be dividable by 10 as well
 			min_range = 90, -- min distance away from hotspot centre and units from each other. should always be at least 70, to avoid cops from going through walls 
@@ -66,7 +66,7 @@ if not DS_BW.HotspotLogic then
 	function DS_BW.HotSpotLogic:UpdateHotSpotList()
 	
 		-- how many seconds to wait in-between adding player-location-based hotspots
-		local desired_player_update_cycle = 88
+		local desired_player_update_cycle = 72
 		
 		desired_player_update_cycle = desired_player_update_cycle / self._updates_delay
 		
@@ -671,8 +671,33 @@ if not DS_BW.HotspotLogic then
 		
 		if player_unit and #hotspot.assigned_units < get_max_cop_amount(hotspot) then -- add more
 			
+			local max_enemy_range = 2000
+			if Global and Global.level_data then
+				local big_maps = {
+					peta = 6000,
+					crojob3 = 7500,
+					crojob3_night = 7500,
+					arm_for = 3500,
+					corp = 3500,
+					red2 = 2500,
+					traip = 3500,
+					ranc = 3500,
+					kenaz = 3500,
+					chca = 4000,
+					alex_3 = 5000,
+					watchdogs_1 = 3500,
+					watchdogs_1_night = 3500,
+					pbr2 = 3500,
+					jolly = 3500,
+				}
+				if big_maps[Global.level_data.level_id] then
+					max_enemy_range = big_maps[Global.level_data.level_id]
+				end
+			end
+			
 			local hotspot_position = hotspot._location
-			local enemies = World:find_units_quick("sphere", hotspot_position, 2000, managers.slot:get_mask("enemies"))
+			
+			local enemies = World:find_units_quick("sphere", hotspot_position, max_enemy_range, managers.slot:get_mask("enemies"))
 			if enemies and #enemies >= 1 then
 				
 				-- temp objective to check if unit can do it. afterwards we assign them same objective but with a slightly different destination coords and a complete callback
@@ -688,10 +713,14 @@ if not DS_BW.HotspotLogic then
 				-- Check every enemy in 20m radius, make sure its a valid enemy for the task, and assign them to attack a hotspot
 				local enemies_to_assign = get_max_cop_amount(hotspot) - tblsize(hotspot.assigned_units)
 				for i, enemy in pairs(enemies) do
-					if self:AreUnitsEnemies(player_unit, enemy) then
+					local ignored_logics = {
+						inactive = true,
+						intimidated = true,
+					}
+					if self:AreUnitsEnemies(player_unit, enemy) and not ignored_logics[enemy:brain()._current_logic_name] then
 						local enemy_chartweak = enemy:base():char_tweak()
 						-- avoid snipers from ditching their sniper spots (ngl if was pretty funny tho), and some other units from attacking hotspots
-						if enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
+						if enemy_chartweak.access and enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and enemy_chartweak.tags and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
 							-- make sure cop doesnt belong to another hotspot already
 							if enemies_to_assign > 0 and not self.HotSpotAssignedUnits[tostring(enemy:id())] and enemy:brain():is_available_for_assignment(objective) then
 								enemies_to_assign = enemies_to_assign - 1

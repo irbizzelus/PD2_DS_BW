@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.1"
-	DS_BW.version_num = 1.1 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
+	DS_BW.version = "1.2" -- this one is used for the welcoming message mainly
+	DS_BW.version_num = 1.2 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- info msg
 		skills_showcase = 2,
@@ -23,12 +23,15 @@ if not DS_BW then
 	DS_BW.Assault_info = {
 		phase = "breachingbreeches",
 		number = -1,
+		latest_starting_time = 0,
 		is_infinite = false
     }
 	DS_BW.Miniboss_info = {
 		kill_counter = 0,
 		appearances = 0,
 		is_alive = false,
+		has_spawned_this_wave = false,
+		spawn_chance = {current = 0.4, increase = 0.15}, -- uses current as base, because it's never resest
 		spawn_locations = {}
     }
 	DS_BW.players = {}
@@ -42,8 +45,10 @@ if not DS_BW then
 			requested_mods_2 = false,
 		}
 	end
+	DS_BW.kpm_tracker = {update_after = -999, kills = {0,0,0,0}, kpm = {0,0,0,0}, penalties = {{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0}}}
 	DS_BW.color = Color(255,240,140,35) / 255
 	DS_BW.end_stats_printed = false
+	DS_BW.peers_with_mod = {}
 
     function DS_BW:Save()
         local file = io.open(SavePath .. 'DS_BW_save.txt', 'w+')
@@ -87,7 +92,7 @@ if not DS_BW then
 	function DS_BW.change_lobby_name(is_DS)
 		if managers.network.matchmake._lobby_attributes and managers.network.matchmake.lobby_handler then
 			local cur_name = tostring(managers.network.matchmake._lobby_attributes.owner_name)
-			local new_name = "DS, but Worse (Legacy)"
+			local new_name = "DS, but Worse"
 			if not is_DS then
 				new_name = managers.network.account:username()
 			end
@@ -103,7 +108,7 @@ if not DS_BW then
 
 	-- Change the surrender presets to harder ones
 	function DS_BW:update_surrender_tweak_data()
-		-- avoid crashed if tweak_data global wasnt created by the game yet by waiting until it loads. if it never does, we have bigger problems then creating a semi infinite loop
+		-- avoid crashes if tweak_data global wasnt created by the game yet by waiting until it loads. if it never does, we have bigger problems then creating a semi infinite loop
 		if not tweak_data then
 			DelayedCalls:Add("updateDomsAfterTweakdataHasLoaded", 0.5, function()
 				DS_BW:update_surrender_tweak_data()
@@ -204,6 +209,9 @@ if not DS_BW then
 			-- units on boiling point that can deal DS levels of damage are considered to be cops.
 			if Global.level_data and Global.level_data.level_id == "mad" then
 				tweak_data.character.cop.surrender = surrender_preset_hard
+				tweak_data.character.heavy_swat.surrender = surrender_preset_normal
+				tweak_data.character.fbi_heavy_swat.surrender = surrender_preset_normal
+				tweak_data.character.zeal_heavy_swat.surrender = surrender_preset_normal
 			end
 			
 		end
@@ -220,7 +228,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = tostring(DS_BW.version).."\n\n- Increased ECM stun chances from 0% to 18%, but reduced ECM stun duration from 6-9 seconds to 1.5 seconds.\n- Reduced all Bulldozer types' spawn rates by roughly 43%, and adjusted weapons they use.\n- Replaced flashbang's gas trap with explosive charges.\n- Improved miniboss spawn logic."
+				local message = tostring(DS_BW.version).." REVAMP\n\nThis mod has moved from the previous 50% global damage resistance version to a new, fully rebalanced version of itself. The damage resistance feature was reworked and is not part of a new \"Adaptable difficulty\" feature, while most other features were either left intact or were updated slightly. Overall enemy presence was also increased, so instead of having less enemies with more health you now have more enemies with slightly lower damaging weapons. If you dislike this new version, you may download older version on Modworkshop, but if you ask me - this version is way more fun.\nCheck full changelog for a more detailed breakdown."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
@@ -231,7 +239,8 @@ if not DS_BW then
 	
 	function DS_BW:welcomemsg1(peer_id) -- welcome message for clients
 		if Network:is_server() and DS_BW.DS_difficultycheck == true then
-			DelayedCalls:Add("DS_BW:welcomemsg1topeer_" .. tostring(peer_id), 0.3, function()
+			LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "Hello_"..tostring(DS_BW.version))
+			DelayedCalls:Add("DS_BW:welcomemsg1topeer_" .. tostring(peer_id), 1.2, function()
 				local peer = managers.network:session():peer(peer_id)
 				
 				if peer == managers.network:session():local_peer() then
@@ -245,9 +254,11 @@ if not DS_BW then
 					end
 					local message = "Welcome "..peer:name().."! This lobby runs \"Death Sentence, but Worse\" mod (Ver. "..DS_BW.version..") which adjusts loud gameplay in a few ways:"
 					if managers.network:session() and managers.network:session():peers() then
-						peer:send("request_player_name_reply", "DS_BW")
-						peer:send("send_chat_message", ChatManager.GAME, message)
 						DS_BW.players[peer_id].welcome_msg1_shown = true
+						if not DS_BW.peers_with_mod[peer_id] then
+							peer:send("request_player_name_reply", "DS_BW")
+							peer:send("send_chat_message", ChatManager.GAME, message)
+						end
 					end
 				end
 			end)
@@ -256,7 +267,7 @@ if not DS_BW then
 
 	function DS_BW:welcomemsg2(peer_id)
 		if Network:is_server() and DS_BW.DS_difficultycheck == true then
-			DelayedCalls:Add("DS_BW:welcomemsg2topeer_" .. tostring(peer_id), 0.9, function()
+			DelayedCalls:Add("DS_BW:welcomemsg2topeer_" .. tostring(peer_id), 1.6, function()
 				local peer = managers.network:session():peer(peer_id)
 				
 				if peer == managers.network:session():local_peer() then
@@ -269,19 +280,16 @@ if not DS_BW then
 						return
 					end
 					if managers.network:session() and managers.network:session():peers() then
-						if Global.level_data and Global.level_data.level_id == "mad" then
-							peer:send("send_chat_message", ChatManager.GAME, "All enemies are stronger:\n- WHY DID YOU GO TO RUSSIA? \"Boiling Point\" heist can now spawn enemies who have almost no health but deal proper DS damage.\n- Enemies now have 75% DAMAGE RESISTANCE: /dmg\n- Enemies have ECM STUN effect RESISTANCE: /ecm")
-						else
-							peer:send("send_chat_message", ChatManager.GAME, "All enemies are stronger:\n- Enemies have 50% DAMAGE RESISTANCE: /dmg\n- Enemies have resistance to the ECM STUN effect: /ecm")
-						end
-						peer:send("send_chat_message", ChatManager.GAME, "All enemies are togher and smarter:\n- It's MUCH harder to make enemies surrender: /dom\n- Enemies can now HANDCUFF you during interactions: /cuffs\n- Enemy variety, weapon usage and behavior were altered to make your life worse: /cops")
-						peer:send("send_chat_message", ChatManager.GAME, "Additonal gameplay tweaks:\n- After detonation flashbangs can now EXPLODE, or create a FIRE field, damaging players: /flash\n- Assault pacing was altered: /assault\n- Swat turrets will no longer self repair :)")
-						peer:send("send_chat_message", ChatManager.GAME, "You can request a private message with additional information on any change using associated chat commands. Bring your best build and a lot of ammo. Good luck.")
-						if DS_BW and not MenuCallbackHandler:is_modded_client() then
-							peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
-						end
-						peer:send("request_player_name_reply", managers.network.account:username())
 						DS_BW.players[peer_id].welcome_msg2_shown = true
+						if not DS_BW.peers_with_mod[peer_id] then
+							peer:send("send_chat_message", ChatManager.GAME, "\n- Enemies have resistance to the ECM STUN effect: /ecm\n- It's MUCH harder to make enemies surrender: /dom\n- Enemies can now HANDCUFF you during interactions: /cuffs\n- Enemy variety, behavior, and used weapons were altered: /cops and /weapons")
+							peer:send("send_chat_message", ChatManager.GAME, "\n- After detonation flashbangs can now EXPLODE, or create a FIRE field, damaging players: /flash\n- Assault pacing was altered: /assault\n- Swat turrets will no longer self-repair :)")
+							peer:send("send_chat_message", ChatManager.GAME, "Chat commands will provide private messages with additional information on mentioned changes. Bring your best build and good luck.")
+							if DS_BW and not MenuCallbackHandler:is_modded_client() then
+								peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
+							end
+							peer:send("request_player_name_reply", managers.network.account:username())
+						end
 					end
 				end
 			end)

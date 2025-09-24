@@ -98,19 +98,24 @@ if not DS_BW.CopUtils then
 			important = true
 		}
 
-	-- Check every enemy in radius, make sure its actually an enemy, and pick closest one to come for player
+		-- Check every enemy in radius, make sure its actually an enemy, and pick closest one to come for player
 		for i, enemy in pairs(enemies) do
 			if self:AreUnitsEnemies(player_unit, enemy) then
 				local enemy_chartweak = enemy:base():char_tweak()
-				if enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
-					local dist = mvector3.distance(enemy:position(), playerpos)
-					local is_available = enemy:brain():is_available_for_assignment(objective)
+				if enemy_chartweak and enemy_chartweak.access and enemy_chartweak.tags and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
+					local ignored_logics = {
+						inactive = true,
+						intimidated = true,
+					}
+					if not ignored_logics[enemy:brain()._current_logic_name] then
+						local dist = mvector3.distance(enemy:position(), playerpos)
+						local is_available = enemy:brain():is_available_for_assignment(objective)
 
-					if dist < lowest_distance and is_available then
-						lowest_distance = dist
-						closest_enemy = enemy
+						if dist < lowest_distance and is_available then
+							lowest_distance = dist
+							closest_enemy = enemy
+						end
 					end
-
 				end
 			end
 		end
@@ -159,8 +164,9 @@ if not DS_BW.CopUtils then
 		else
 			result = self:CheckClientMeleeDamageArrest(player_unit, cop)
 		end
-
-		if result == "arrested" then
+		
+		local peer_id = managers.network:session():peer_by_unit(player_unit):id()
+		if result == "arrested" and (Application:time() > DS_BW.CopUtils.allowed_cuffing_time[peer_id]) and not DS_BW.peers_with_mod[peer_id] then
 			player_unit:movement():on_cuffed()
 			-- Make cop say a line
 			cop:sound():say("i03", true, false)
@@ -181,9 +187,14 @@ if not DS_BW.CopUtils then
 	end
 
 	function DS_BW.CopUtils:NearbyCopAutoArrestCheck(player_unit, islocal)
-
+		
+		local is_client_in_dsbw_lobby = false
 		if Network and Network:is_client() then
-			return
+			if DS_BW.peers_with_mod[1] and Global.game_settings and Global.game_settings.difficulty and Global.game_settings.difficulty == "sm_wish" then
+				is_client_in_dsbw_lobby = true
+			else
+				return
+			end
 		end
 
 		-- Stealth phase check
@@ -234,12 +245,20 @@ if not DS_BW.CopUtils then
 								-- positions are slighlty raised on vertical axis to avoid checks on feet level
 								local world_geometry_raycast = World:raycast( "ray", player_unit:position() + Vector3(0, 0, 50), enemy:position() + Vector3(0, 0, 80), "slot_mask", managers.slot:get_mask( "world_geometry" ))
 								if not world_geometry_raycast then
-									local enemy_chartweak = enemy:base():char_tweak()
-									if enemy_chartweak.access ~= "gangster" then
-										if Application:time() > DS_BW.CopUtils.allowed_cuffing_time[managers.network:session():peer_by_unit(player_unit):id()] then
-											player_unit:movement():on_cuffed()
-											enemy:sound():say("i03", true, false)
-											return
+									local ignored_logics = {
+										inactive = true,
+										intimidated = true,
+									}
+									if not ignored_logics[enemy:brain()._current_logic_name] then
+										local enemy_chartweak = enemy:base():char_tweak()
+										if enemy_chartweak.access ~= "gangster" then
+											if (Application:time() > DS_BW.CopUtils.allowed_cuffing_time[managers.network:session():peer_by_unit(player_unit):id()]) or is_client_in_dsbw_lobby then
+												player_unit:movement():on_cuffed()
+												if not is_client_in_dsbw_lobby then
+													enemy:sound():say("i03", true, false)
+												end
+												return
+											end
 										end
 									end
 								end

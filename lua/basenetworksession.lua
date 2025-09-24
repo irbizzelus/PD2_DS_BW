@@ -54,3 +54,40 @@ Hooks:PostHook(BaseNetworkSession, "on_statistics_recieved", "DS_BW_endgamestats
 		end
 	end)
 end)
+
+-- only sync to clients as host, or as client only try to sync with host
+Hooks:Add("BaseNetworkSessionOnLoadComplete", "DS_BW_send_hello", function(local_peer, id)
+	if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then
+		LuaNetworking:SendToPeersExcept(1, "DS_BW_sync", "Hello_"..tostring(DS_BW.version))
+	elseif Network:is_client() then
+		LuaNetworking:SendToPeer(1, "DS_BW_sync", "Hello!")
+	end
+end)
+
+Hooks:Add("BaseNetworkSessionOnPeerEnteredLobby", "DS_BW_send_hello_to_new_joiner", function(peer, peer_id)
+	if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then
+		LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "Hello_"..tostring(DS_BW.version))
+	elseif Network:is_client() and peer_id == 1 then
+		LuaNetworking:SendToPeer(1, "DS_BW_sync", "Hello!")
+	end
+end)
+
+-- proccessing
+Hooks:Add("NetworkReceivedData", "DS_BW_NetworkReceivedData", function(sender, messageType, data)
+	if messageType == "DS_BW_sync" and string.sub(data, 1, 5) == "Hello" then
+		DS_BW.peers_with_mod[sender] = true
+		if sender == 1 and string.sub(data, 1, 6) == "Hello_" then
+			if not DS_BW._is_client_in_DSBW_lobby then
+				local host_version = string.sub(data, 7, -1)
+				local msg = "Host is running \"DS, but Worse\" mod at version \""..tostring(host_version).."\". If you want a reminder, you could use: /help; /commands; /cops; /ecm; /dmg; /weapons; /flash; /cuffs; /dom; /assault; /hostmods; /ammo; /meds; /rng. Good luck."
+				DS_BW.CM:private_chat_message(managers.network:session():local_peer():id(), msg)
+				DS_BW._is_client_in_DSBW_lobby = true
+			end
+		end
+	end
+end)
+
+-- remove on peer leave
+Hooks:Add("BaseNetworkSessionOnPeerRemoved", "DS_BW_BaseNetworkSessionOnPeerRemoved", function(peer, peer_id, reason)
+	DS_BW.peers_with_mod[peer_id] = nil
+end)

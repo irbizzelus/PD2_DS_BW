@@ -2,7 +2,7 @@
 local orig_explosion_manager_damage_characters = ExplosionManager._damage_characters
 Hooks:OverrideFunction(ExplosionManager, "_damage_characters", function (self, detect_results, params, variant, damage_func_name)
 	DS_BW.explosive_trap_ids = DS_BW.explosive_trap_ids or {}
-	if DS_BW._creating_explosive_flashbang_trap and DS_BW.explosive_trap_ids[params.ignore_unit:id()] then
+	if params.ignore_unit and DS_BW._creating_explosive_flashbang_trap and DS_BW.explosive_trap_ids[params.ignore_unit:id()] then
 		DS_BW._creating_explosive_flashbang_trap = nil
 		local results = {
 			count_cops = 0,
