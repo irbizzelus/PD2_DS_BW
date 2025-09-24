@@ -87,7 +87,7 @@ if not DS_BW then
 	function DS_BW.change_lobby_name(is_DS)
 		if managers.network.matchmake._lobby_attributes and managers.network.matchmake.lobby_handler then
 			local cur_name = tostring(managers.network.matchmake._lobby_attributes.owner_name)
-			local new_name = "DS, but Worse"
+			local new_name = "DS, but Worse (Legacy)"
 			if not is_DS then
 				new_name = managers.network.account:username()
 			end
