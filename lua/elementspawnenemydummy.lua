@@ -107,6 +107,7 @@ Hooks:PostHook(ElementSpawnEnemyDummy, "produce", "DS_BW_spawn_more_shit", funct
 					[3] = 16,
 					[4] = 24,
 					[5] = 35,
+					[6] = 99999, -- since we got no lvl 6, make it simply unreachable
 				}
 				if hkpm > thresholds[DS_BW._low_spawns_manager.level+1] then
 					return true

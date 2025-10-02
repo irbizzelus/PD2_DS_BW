@@ -1210,11 +1210,19 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		}
 		
 		-- self explanatory
-		self.besiege.assault.delay = {
-			5,
-			20,
-			55
-		}
+		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
+			self.besiege.assault.delay = {
+				5,
+				20,
+				55
+			}
+		else
+			self.besiege.assault.delay = {
+				5,
+				20,
+				35
+			}
+		end
 		
 		-- if we have hostages increase delay by a few seconds
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
@@ -1259,6 +1267,8 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 				kenaz = 1.1,
 				-- stealing xmas
 				moon = 1.1,
+				-- mountain master
+				pent = 0.85,
 			}
 			
 			local lvl_id = Global.level_data.level_id

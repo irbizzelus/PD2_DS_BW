@@ -4,7 +4,7 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.2" -- this one is used for the welcoming message mainly
+	DS_BW.version = "1.2.01" -- this one is used for the welcoming message mainly
 	DS_BW.version_num = 1.2 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- info msg
