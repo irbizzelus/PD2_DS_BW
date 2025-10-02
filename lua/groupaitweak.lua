@@ -1214,13 +1214,13 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.delay = {
 				5,
 				20,
-				55
+				35
 			}
 		else
 			self.besiege.assault.delay = {
 				5,
 				20,
-				35
+				55
 			}
 		end
 		
