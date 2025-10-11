@@ -1181,12 +1181,12 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.sustain_duration_min = {
 				60,
 				60,
-				280
+				300
 			}
 			self.besiege.assault.sustain_duration_max = {
 				80,
 				80,
-				300
+				330
 			}
 		else
 			self.besiege.assault.sustain_duration_min = {
@@ -1269,6 +1269,8 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 				moon = 1.1,
 				-- mountain master
 				pent = 0.85,
+				-- big oil day 2
+				welcome_to_the_jungle_2 = 0.95,
 			}
 			
 			local lvl_id = Global.level_data.level_id

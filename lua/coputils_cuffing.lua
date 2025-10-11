@@ -236,7 +236,7 @@ if not DS_BW.CopUtils then
 							end
 						end
 					end
-					local enemies = World:find_units_quick(player_unit, "sphere", player_unit:position(), 150, managers.slot:get_mask("enemies"))
+					local enemies = World:find_units_quick(player_unit, "sphere", player_unit:position(), self._arrest_action_radius, managers.slot:get_mask("enemies"))
 					if enemies and #enemies >= 1 then
 						-- Check every enemy in radius, make sure its actually an enemy
 						for i, enemy in pairs(enemies) do

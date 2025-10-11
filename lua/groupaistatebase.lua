@@ -231,7 +231,7 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 			
 			local function spawn_singular_boss(spawn_pos, target_unit)
 				
-				if not (spawn_pos and target_unit) then
+				if not (spawn_pos and target_unit and alive(target_unit)) then
 					log("[DS_BW] Did not spawn in a miniboss due to missing parameters! spawn_pos: "..tostring(spawn_pos)..", target_unit: "..tostring(target_unit))
 					return false
 				end
