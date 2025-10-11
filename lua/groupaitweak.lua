@@ -1181,23 +1181,23 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.sustain_duration_min = {
 				60,
 				60,
-				300
+				330
 			}
 			self.besiege.assault.sustain_duration_max = {
 				80,
 				80,
-				330
+				360
 			}
 		else
 			self.besiege.assault.sustain_duration_min = {
 				90,
 				90,
-				265
+				300
 			}
 			self.besiege.assault.sustain_duration_max = {
 				110,
 				110,
-				275
+				330
 			}
 		end
 		
