@@ -87,3 +87,15 @@ Hooks:PostHook(HuskPlayerMovement, "_apply_attention_setting_modifications", "DS
 	end
 	
 end)
+
+Hooks:PostHook(HuskPlayerMovement, "set_need_revive", "DSBW_on_husk_downed", function(self, need_revive, down_time)
+	if not (Network:is_server() and DS_BW and DS_BW.DS_difficultycheck) then
+		return
+	end
+	if need_revive and self._unit and alive(self._unit) then
+		local peer_id = managers.network:session():peer_by_unit(self._unit):id()
+		if peer_id and DS_BW.kpm_tracker.kills[peer_id] then
+			DS_BW.kpm_tracker.kills[peer_id] = (DS_BW.kpm_tracker.kills[peer_id] or 0) - 5
+		end
+	end
+end)

@@ -55,7 +55,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("dmg", {
 		callback = function(sender)
-			local msg_1 = "If your performance was evaluated as \"too good\", you may start dealing less damage to all enemies. This debuff can be set to 20% (1.25x the bullets to kill) or 33% (1.5x the bullets to kill)."
+			local msg_1 = "If your performance was evaluated as \"too good\", you may start dealing less damage to all enemies. This debuff can be set to 20% (1.25x the bullets to kill), 33% (1.5x the bullets to kill) or 50% (2x the bullets to kill)."
 			local msg_2 = "This effect may be removed during your next performance evaluation, unless the automatic message from DS_BW says that this debuff is permanent. If a global damage resistance debuff is present, it will override your personal debuff."
 			DS_BW.CM:private_chat_message(sender:id(), msg_1)
 			DS_BW.CM:private_chat_message(sender:id(), msg_2)
@@ -64,9 +64,9 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("weapons", {
 		callback = function(sender)
-			local msg_1 = "Heavy swat have 50% chance to use a 225-dmg rifle with no fall off, 17% chance to use a 150-dmg rifle with no fall off, 17% chance for a 325-dmg shotgun with fall off, and 17% chance for a 80-dmg LMG with fall off."
-			local msg_2 = "Light swat have 50% chance to use a 67.5-dmg SMG with no fall off, 33% chance for a 150-dmg rifle with no fall off, and 17% chance for a 525-dmg shotgun with fall off."
-			local msg_3 = "Most special units use weapons with slightly higher damage. All bulldozer types now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect."
+			local msg_1 = "Heavy swat have 44% chance to use a 225-dmg rifle with no fall off, 44% chance to use a 150-dmg rifle with no fall off, and 12% chance for a 525-dmg shotgun with fall off."
+			local msg_2 = "Light swat have 29% chance to use a 67.5-dmg SMG with no fall off, 29% chance for a 150-dmg rifle with no fall off, 29% chance for a 80-dmg LMG with fall off and 14% chance for a 225-dmg shotgun with fall off."
+			local msg_3 = "Most special units use weapons with higher damage. All bulldozers now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect. As the game progresses, enemies may start using higher damaging weapons more often."
 			if Global and Global.level_data and Global.level_data.level_id == "mad" then
 				msg_1 = "Heavy swat was replaced with a super light unit who has a 40% chance to use a 225-dmg rifle with no fall off, 40% chance to use a 375-dmg rifle with no fall off, and 20% chance for a 525-dmg shotgun with fall off."
 				msg_2 = "Light swat was replaced with a heavy unit who has a 50% chance to use a 80-dmg minigun with fall off or a 50% chance for a 100-dmg rifle with no fall off."

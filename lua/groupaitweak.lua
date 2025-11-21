@@ -414,11 +414,11 @@ Hooks:PostHook(GroupAITweakData, "_init_unit_categories", "DS_BW_tweak_initunitc
 		end
 		
 		self.special_unit_spawn_limits = {
-			shield = 7,
-			medic = 4,
-			taser = 5,
+			shield = 8,
+			medic = 5,
+			taser = 6,
 			tank = 3,
-			spooc = 4
+			spooc = 5
 		}
 	
 	else
@@ -1013,6 +1013,14 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 					amount_max = 2,
 					tactics = self._tactics.FBI_swat_rifle,
 					rank = 1
+				},
+				{
+					unit = "SupportCQB",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.CS_swat_rifle_flank,
+					rank = 1
 				}
 			}
 		}
@@ -1027,6 +1035,14 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 					amount_min = 2,
 					amount_max = 2,
 					tactics = self._tactics.CS_tazer,
+					rank = 1
+				},
+				{
+					unit = "RifleMen",
+					freq = 1,
+					amount_min = 1,
+					amount_max = 2,
+					tactics = self._tactics.FBI_swat_rifle,
 					rank = 1
 				},
 				{
@@ -1179,25 +1195,25 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			-- no mercy shorter first waves
 			self.besiege.assault.sustain_duration_min = {
-				60,
-				60,
-				330
-			}
-			self.besiege.assault.sustain_duration_max = {
-				80,
-				80,
-				360
-			}
-		else
-			self.besiege.assault.sustain_duration_min = {
-				90,
-				90,
+				40,
+				40,
 				300
 			}
 			self.besiege.assault.sustain_duration_max = {
-				110,
-				110,
-				330
+				50,
+				50,
+				310
+			}
+		else
+			self.besiege.assault.sustain_duration_min = {
+				60,
+				60,
+				270
+			}
+			self.besiege.assault.sustain_duration_max = {
+				70,
+				70,
+				280
 			}
 		end
 		
@@ -1212,15 +1228,15 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		-- self explanatory
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.delay = {
-				5,
-				20,
-				35
+				2.5,
+				7.5,
+				15
 			}
 		else
 			self.besiege.assault.delay = {
 				5,
-				20,
-				55
+				15,
+				30
 			}
 		end
 		
@@ -1229,22 +1245,22 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			-- no mercy shorter delay for first few waves
 			self.besiege.assault.hostage_hesitation_delay = {
 				1,
-				1,
-				15
+				5,
+				10
 			}
 		else
 			self.besiege.assault.hostage_hesitation_delay = {
+				5,
 				10,
-				15,
-				25
+				15
 			}
 		end
 		
 		-- Max cop amount on the map at the same time, depends on diff
 		self.besiege.assault.force = {
-			40,
-			44,
-			50
+			24,
+			28,
+			34
 		}
 		-- adjusments for it based on the map
 		if Global and Global.level_data then
@@ -1296,15 +1312,15 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		-- Total max cop spawns per each assault
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.force_pool = {
-				60,
-				400,
-				400
+				40,
+				275,
+				275
 			}
 		else
 			self.besiege.assault.force_pool = {
-				60,
-				250,
-				250
+				40,
+				180,
+				180
 			}
 		end
 		
@@ -1463,17 +1479,17 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		Squad_Light_1 = {
 			0,
 			0.01,
-			0.015
+			0.045
 		},
 		Squad_Light_2 = {
 			0,
 			0.01,
-			0.015
+			0.045
 		},
 		Squad_Light_3 = {
 			0,
 			0.01,
-			0.015
+			0.045
 		},
 		FBI_HRT_mix = {
 			0.2,
@@ -1483,42 +1499,42 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		tac_swat_rifle_flank = { -- Squad_Heavy_1
 			0,
 			0.01,
-			0.047
+			0.14
 		},
 		Squad_Heavy_2 = {
 			0,
 			0,
-			0.047
+			0.14
 		},
 		Squad_Heavy_3 = {
 			0,
 			0,
-			0.047
+			0.14
 		},
 		tac_tazer_flanking = { -- Squad_Medic
 			0,
-			0.15,
-			0.2
+			0.1,
+			0.15
 		},
 		tac_shield_wall = { -- Squad_Shield
 			0,
 			0.05,
-			0.25
+			0.15
 		},
 		tac_tazer_charge = { -- Squad_Tazer
 			0,
 			0.15,
-			0.25
+			0.19
 		},
 		tac_bull_rush = { -- Squad_Tank
 			0,
 			0.05,
-			0.08
+			0.064 -- 0.08
 		},
 		Squad_Tank_Annoying = {
 			0,
 			0,
-			0.07
+			0.056 -- 0.07
 		},
 		FBI_spoocs = {
 			0,

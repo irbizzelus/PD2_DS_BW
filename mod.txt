@@ -1,7 +1,7 @@
 {
     "name": "Death Sentence, but Worse.",
     "description": "Modifies Death Sentence difficulty to make it harder.",
-    "version": "1.2.02",
+    "version": "1.3",
     "author": "irbizzelus",
     "contact": "Steam profile link is on my modworkshop account",
 	"image" : "DS_BW.dds",
@@ -22,6 +22,7 @@
 		{"hook_id": "lib/managers/mission/elementspawnenemydummy", "script_path": "lua/elementspawnenemydummy.lua"},
 		{"hook_id": "lib/managers/mission/elementspawnenemygroup", "script_path": "lua/elementspawnenemygroup.lua"},
 		{"hook_id": "lib/managers/mission/elementspecialobjective", "script_path": "lua/elementspecialobjective.lua"},
+		{"hook_id": "lib/managers/enemymanager", "script_path": "lua/enemymanager.lua"},
 		{"hook_id": "lib/tweak_data/enveffecttweakdata", "script_path": "lua/enveffecttweakdata.lua"},
 		{"hook_id": "lib/managers/firemanager", "script_path": "lua/firemanager.lua"},
 		{"hook_id": "lib/managers/explosionmanager", "script_path": "lua/explosionmanager.lua"},

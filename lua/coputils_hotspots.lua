@@ -8,7 +8,7 @@ if not DS_BW.HotspotLogic then
 		_updates_delay = 4, -- update cycle delay in secs
 		_last_spot_id = 1, -- each spot has it's own id, keep track of latest for new id evaluation
 		_hotSpotRadius = 650, -- used for collision checks when adding new hotspots, and for distance check for players within hotspot radius
-		_maxCopsPerHotSpot = 6, -- at least a 3
+		_maxCopsPerHotSpot = 5, -- at least a 3
 		Defense_positions = {
 			-- note: due to the way spiral formation is caclulating next position, make sure that maxrange/minrange returns a whole number, to avoid issues. also both numbers need to be dividable by 10 as well
 			min_range = 90, -- min distance away from hotspot centre and units from each other. should always be at least 70, to avoid cops from going through walls 

@@ -1,0 +1,197 @@
+{
+	"menu_id": "DS_BW_menu",
+	"parent_menu_id": "blt_options",
+	"title": "DS_BW_title",
+	"description": "DS_BW_blank",
+	"back_callback": "DS_BWsave",
+	"items":
+	[
+		{
+			"type" : "divider",
+			"size" : 22
+		},
+		{
+			"type" : "button",
+			"id" : "gameplay_header",
+			"title" : "DS_BW_gameplay_header",
+			"description" : "DS_BW_blank",
+			"callback" : "DS_BWcb_donothing"
+		},
+		{
+			"type" : "multiple_choice",
+			"id" : "DS_BW_adapt_diff_announcements",
+			"title" : "DS_BW_adapt_diff_announcements",
+			"description" : "DS_BW_adapt_diff_announcements_desc",
+			"callback" : "DS_BWcb_adapt_diff_announcements",
+			"items" : [
+				"DS_BW_adapt_diff_announcements_1",
+				"DS_BW_adapt_diff_announcements_2",
+				"DS_BW_adapt_diff_announcements_3",
+			],
+			"value" : "adapt_diff_announcements",
+			"default_value" : 2
+		},
+		{
+			"type" : "multiple_choice",
+			"id" : "starting_adapt_diff",
+			"title" : "DS_BW_starting_adapt_diff",
+			"description" : "DS_BW_starting_adapt_diff_desc",
+			"callback" : "DS_BWcb_starting_adapt_diff",
+			"items" : [
+				"DS_BW_starting_adapt_diff_1",
+				"DS_BW_starting_adapt_diff_2",
+				"DS_BW_starting_adapt_diff_3",
+			],
+			"value" : "starting_adapt_diff",
+			"default_value" : 1
+		},
+		{
+			"type" : "toggle",
+			"id" : "always_hard_heists",
+			"title" : "DS_BW_always_hard_heists",
+			"description" : "DS_BW_always_hard_heists_desc",
+			"callback" : "DS_BWcb_always_hard_heists",
+			"value" : "always_hard_heists",
+			"default_value" : false
+		},
+		{
+			"type" : "slider",
+			"id" : "tasks_per_min_mul",
+			"title" : "DS_BW_tasks_per_min_mul",
+			"description" : "DS_BW_tasks_per_min_mul_desc",
+			"callback" : "DWPcb_tasks_per_min_mul",
+			"value" : "tasks_per_min_mul",
+			"default_value" : 1,
+			"min" : 1,
+			"max" : 5,
+			"step" : 0.01
+		},
+		{
+			"type" : "divider",
+			"size" : 16
+		},
+		{
+			"type" : "button",
+			"id" : "player_info",
+			"title" : "DS_BW_player_info_header",
+			"description" : "DS_BW_player_info_desc",
+			"callback" : "DS_BWcb_donothing"
+		},
+		{
+			"type" : "multiple_choice",
+			"id" : "skills_showcase",
+			"title" : "DS_BW_skills_showcase",
+			"description" : "DS_BW_skills_showcase_desc",
+			"callback" : "DS_BWcb_skills_showcase",
+			"items" : [
+				"DS_BW_skills_showcase_1",
+				"DS_BW_skills_showcase_2",
+				"DS_BW_skills_showcase_3",
+				"DS_BW_skills_showcase_4"
+			],
+			"value" : "skills_showcase",
+			"default_value" : 2
+		},
+		{
+			"type" : "toggle",
+			"id" : "hourinfo",
+			"title" : "DS_BW_hourinfo",
+			"description" : "DS_BW_hourinfo_desc",
+			"callback" : "DS_BWcb_hourinfo",
+			"value" : "hourinfo",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "infamy",
+			"title" : "DS_BW_infamy",
+			"description" : "DS_BW_infamy_desc",
+			"callback" : "DS_BWcb_infamy",
+			"value" : "infamy",
+			"default_value" : true
+		},
+		{
+			"type" : "divider",
+			"size" : 16
+		},
+		{
+			"type" : "button",
+			"id" : "endstat_header",
+			"title" : "DS_BW_endstat_header",
+			"description" : "DS_BW_endstat_header_desc",
+			"callback" : "DS_BWcb_donothing"
+		},
+		{
+			"type" : "toggle",
+			"id" : "endstats_enabled",
+			"title" : "DS_BW_endstattoggle",
+			"description" : "DS_BW_endstattoggle_desc",
+			"callback" : "DS_BWcb_endstattoggle",
+			"value" : "endstats_enabled",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "endstats_public",
+			"title" : "DS_BW_statsmsgpublic",
+			"description" : "DS_BW_statsmsgpublic_desc",
+			"callback" : "DS_BWcb_statsmsgpublic",
+			"value" : "endstats_public",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "endstats_specials",
+			"title" : "DS_BW_endstatSPkills",
+			"description" : "DS_BW_endstatSPkills_desc",
+			"callback" : "DS_BWcb_endstatSPkills",
+			"value" : "endstats_specials",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
+			"id" : "endstats_headshots",
+			"title" : "DS_BW_endstatheadshots",
+			"description" : "DS_BW_endstatheadshots_desc",
+			"callback" : "DS_BWcb_endstatheadshots",
+			"value" : "endstats_headshots",
+			"default_value" : false
+		},
+		{
+			"type" : "toggle",
+			"id" : "endstats_accuracy",
+			"title" : "DS_BW_endstataccuarcy",
+			"description" : "DS_BW_endstataccuarcy_desc",
+			"callback" : "DS_BWcb_endstataccuarcy",
+			"value" : "endstats_accuracy",
+			"default_value" : false
+		},
+		{
+			"type" : "divider",
+			"size" : 16
+		},
+		{
+			"type" : "button",
+			"id" : "misc_header",
+			"title" : "DS_BW_misc_header",
+			"description" : "DS_BW_blank",
+			"callback" : "DS_BWcb_donothing"
+		},
+		{
+			"type" : "toggle",
+			"id" : "lobbyname",
+			"title" : "DS_BW_enablelobbyname",
+			"description" : "DS_BW_lobbyname_desc",
+			"callback" : "DS_BWcb_lobbyname",
+			"value" : "lobbyname",
+			"default_value" : true
+		},
+		{
+			"type" : "button",
+			"id" : "DS_BW_patch_notes",
+			"title" : "DS_BW_patch_notes",
+			"description" : "DS_BW_patch_notes_desc",
+			"callback" : "DS_BWcb_patch_notes"
+		}
+	]
+}

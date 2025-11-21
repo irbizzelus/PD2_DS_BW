@@ -85,6 +85,17 @@ Hooks:Add("NetworkReceivedData", "DS_BW_NetworkReceivedData", function(sender, m
 			end
 		end
 	end
+	if messageType == "DS_BW_sync" and string.sub(data, 1, 4) == "ADU_" and sender == 1 and Network:is_client() then
+		local lvl_str = string.sub(data, 5, -1) or "???"
+		local msg = "Adaptive difficulty level: "..lvl_str
+		if not DS_BW._ADU_msg_cooldown then -- prevent dupes of these messages for joining clients, as these updates normally should not happen more often then once every ~40 secs
+			DS_BW._ADU_msg_cooldown = -1
+		end
+		if DS_BW._ADU_msg_cooldown < Application:time() then
+			DS_BW.CM:private_chat_message(managers.network:session():local_peer():id(), msg)
+			DS_BW._ADU_msg_cooldown = Application:time() + 4
+		end
+	end
 end)
 
 -- remove on peer leave

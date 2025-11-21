@@ -38,6 +38,29 @@ Hooks:PostHook(CharacterTweakData, "_set_sm_wish", "DS_BW_remove_ECM_bullshit", 
 		end
 	end
 	
+	local enemies_2 = {
+		"tank",
+		"tank_medic",
+		"tank_mini",
+		"swat",
+		"fbi_swat",
+		"city_swat",
+		"zeal_swat",
+		"heavy_swat",
+		"heavy_swat_sniper",
+		"fbi_heavy_swat",
+		"zeal_heavy_swat",
+		"sniper",
+		"taser",
+		"marshal_marksman",
+	}
+	-- truly evil
+	for i=1, #enemies_2 do
+		if self[tostring(enemies_2[i])] then
+			self[tostring(enemies_2[i])].always_face_enemy = true
+		end
+	end
+	
 	-- miniboss has weakness to ECM's to make hacker a viable supportive perk option, since its not as good against standard units otherwise
 	self.tank_hw.ecm_vulnerability = 0.99
 	if self.tank_hw.ecm_hurts and self.tank_hw.ecm_hurts.ears then

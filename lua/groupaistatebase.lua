@@ -2,69 +2,31 @@ if not DS_BW then
 	dofile(ModPath .. "lua/DS_BW_base.lua")
 end
 
--- most heists will follow a rule where first assault is easier then 2nd and onward.
--- sometimes however, it makes no logicas sense to have 'recon' easy assaults at the begining because a heist could be a set up (like alaska)
--- in such cases we skip first assault. also aplies to heists that are in general slower paced at the start (like harvest and trustee branchbank)
-DS_BW.heists_without_1st_assault = {
-	"branchbank",
-	"rvd1", -- reserviour dogs
-	"rvd2",
-	"nail", -- haloween heists
-	"hvh",
-	"help",
-	"firestarter_1", -- mhm
-	"firestarter_2",
-	"firestarter_3",
-	"watchdogs_1_night",
-	"watchdogs_1",
-	"watchdogs_2",
-	"watchdogs_2_day",
-	"alex_3", -- rats 3
-	"pex", -- breakfast in tihuana
-	"bph", -- hell's island
-	"brb", -- Brooklyn bank
-	"vit", -- white house
-	"hox_1", -- breakout
-	"hox_2",
-	"framing_frame_2", -- mhm
-	"chew", -- biker heist day 2
-	"pines", -- vlad's white xmas
-	"run", -- heat street
-	"man", -- undercover
-	"firestarter_3", -- mhm
-	"mad", -- boil point
-	"wwh", -- alaska
-	"mallcrasher", -- alaska, trust me bro
-	"peta2", -- goats
-	"escape_overpass",
-	"escape_overpass_night",
-	"escape_park",
-	"escape_park_day",
-	"escape_cafe",
-	"escape_cafe_day",
-	"escape_street",
-	"escape_garage",
-}
-
 -- prevent drama from goin over 95 so we never skip anticipation, except for very first wave. reason: longer breaks
 -- also some track's anticipation music is 11/10, yet i almost never hear it because of this useless (gameplay wise) mechanic
 -- also prevent drama from beeing too low to make fade last as long as possible, thanks to update 181, this is not exploitable and gives 1 minute of free time during fade at best
 local orig_drama = GroupAIStateBase._add_drama
 function GroupAIStateBase:_add_drama(amount)
 	
-	if DS_BW and DS_BW.DS_difficultycheck then
+	if DS_BW and DS_BW.DS_difficultycheck and self._task_data and self._task_data.assault then
 		if Global.level_data and Global.level_data.level_id == "nmh" then
 			-- make first 2 assauls on no mercy faster then other heists
-			if self._assault_number <= 1 then
-				if self._task_data and self._task_data.assault and self._task_data.assault.phase == "anticipation" and self._drama_data.amount ~= 0.999 then
+			if self._assault_number <= 2 then
+				if self._task_data.assault.phase == "anticipation" and self._drama_data.amount ~= 0.999 then
 					self._drama_data.amount = 0.999
 					amount = 0
-				elseif self._task_data and self._task_data.assault and self._task_data.assault.phase == "fade" and self._drama_data.amount ~= 0.01 then
+				elseif self._task_data.assault.phase == "fade" and self._drama_data.amount ~= 0.01 then
 					self._drama_data.amount = 0.01
+					amount = 0
+				elseif self._drama_data.amount + amount ~= 0.9 then
+					self._drama_data.amount = 0.9
 					amount = 0
 				end
 			else
-				if self._drama_data.amount + amount ~= 0.9 then
+				if self._task_data.assault.phase == "fade" and DS_BW.fade_started_prematurely then
+					self._drama_data.amount = 0.01
+					amount = 0
+				elseif self._drama_data.amount + amount ~= 0.9 then
 					self._drama_data.amount = 0.9
 					amount = 0
 				end
@@ -76,7 +38,17 @@ function GroupAIStateBase:_add_drama(amount)
 					amount = 0
 				end
 			else
-				if self._drama_data.amount + amount ~= 0.9 then
+				if self._task_data.assault.phase == "fade" then
+					if DS_BW.fade_started_prematurely or self._assault_number <= 1 then
+						self._drama_data.amount = 0.01
+						amount = 0
+					else
+						if self._drama_data.amount + amount ~= 0.9 then
+							self._drama_data.amount = 0.9
+							amount = 0
+						end
+					end
+				elseif self._drama_data.amount + amount ~= 0.9 then
 					self._drama_data.amount = 0.9
 					amount = 0
 				end
@@ -98,7 +70,7 @@ end
 local orig_detonate_world_smoke_grenade = GroupAIStateBase.detonate_world_smoke_grenade
 function GroupAIStateBase:detonate_world_smoke_grenade(id)
 	-- disable smokes/flashbangs for the first wave, if heist is not 'fast paced'
-	if DS_BW.DS_difficultycheck == true and not (Global.level_data and Global.level_data.level_id and (table.contains(DS_BW.heists_without_1st_assault, Global.level_data.level_id))) and self._assault_number <= 1 then
+	if DS_BW.DS_difficultycheck == true and not DS_BW.is_hard_heist() and self._assault_number <= 1 then
 		return
 	end
 	orig_detonate_world_smoke_grenade(self,id)
@@ -112,13 +84,12 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 	
 	local function is_boss_spawn_allowed()
 		local result = false
-		local chance = DS_BW.Miniboss_info.spawn_chance.current
 		local assault_num = DS_BW.Assault_info.number
 		
 		-- always spawn if first assault is endless. begin to gamble on 1st assault if its a fast heist, otherwise start to gamble on 2nd
 		if assault_num == 1 and self._hunt_mode then
 			return true
-		elseif Global.level_data and Global.level_data.level_id and table.contains(DS_BW.heists_without_1st_assault, Global.level_data.level_id) then
+		elseif Global.level_data and Global.level_data.level_id and DS_BW.is_hard_heist() then
 			if assault_num >= 1 then
 				result = true
 			end
@@ -129,8 +100,17 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 		end
 		
 		if result then
-			local rng_success = math.random() <= chance
-			chance = chance + DS_BW.Miniboss_info.spawn_chance.increase
+			if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level then
+				DS_BW.Miniboss_info.spawn_chance.current = DS_BW.Miniboss_info.spawn_chance.current + (DS_BW._low_spawns_manager.level * 0.05) -- adapt. diff level increase always goes through
+			end
+			if DS_BW.Miniboss_info.spawn_chance.current > 0.9 then
+				DS_BW.Miniboss_info.spawn_chance.current = 0.9
+			end
+			local rng_success = math.random() <= DS_BW.Miniboss_info.spawn_chance.current
+			log("[DS_BW] Rolled boss spawn chance against: "..tostring(DS_BW.Miniboss_info.spawn_chance.current * 100).."%, success: "..tostring(rng_success))
+			if not rng_success then -- default increase only goes through if boss did not spawn
+				DS_BW.Miniboss_info.spawn_chance.current = DS_BW.Miniboss_info.spawn_chance.current + DS_BW.Miniboss_info.spawn_chance.increase
+			end
 			return rng_success
 		else
 			return result
@@ -142,7 +122,7 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 		if DS_BW.Miniboss_info.spawn_locations and #DS_BW.Miniboss_info.spawn_locations >= 1 and not (self._phalanx_spawn_group and self._phalanx_spawn_group.has_spawned) then
 			
 			local chosen_player = {}
-			local players = managers.groupai:state():all_player_criminals()
+			local players = self:all_player_criminals()
 			if players then
 				local boss_target = players[table.random_key(players)]
 				if boss_target and boss_target.unit and alive(boss_target.unit) then
@@ -154,31 +134,40 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 			-- try to find enemy special units around chosen player pos, to spawn boss at that location,
 			-- to hopefuly prevent bosses from getting stuck in default spawn locations, and to get them closer to players quickly
 			local specials_found = {}
+			local function SP_dist_check(coords)
+				local res = true
+				for _, player in pairs(self:all_player_criminals()) do
+					if mvector3.distance(player.unit:position(), coords) < 1200 then
+						res = false
+					end
+				end
+				return res
+			end
 			if chosen_player.unit and chosen_player.coords then
 				local enemies = World:find_units_quick(chosen_player.unit, "sphere", chosen_player.coords, 6000, managers.slot:get_mask("enemies"))
 				if enemies and #enemies > 0 then
 					for i, enemy in pairs(enemies) do
 						local enemy_chartweak = enemy:base():char_tweak()
 						if enemy_chartweak.access == "tank" then
-							if mvector3.distance(chosen_player.coords, enemy:position()) >= 2400 then -- only allow to spawn if player is at least 12m away from this enemy
+							if SP_dist_check(enemy:position()) then
 								specials_found.tank = specials_found.tank or {}
 								table.insert(specials_found.tank, enemy:position())
 							end
 						end
 						if enemy_chartweak.access == "shield" then
-							if mvector3.distance(chosen_player.coords, enemy:position()) >= 2400 then
+							if SP_dist_check(enemy:position()) then
 								specials_found.shield = specials_found.shield or {}
 								table.insert(specials_found.shield, enemy:position())
 							end
 						end
 						if enemy_chartweak.access == "spooc" then
-							if mvector3.distance(chosen_player.coords, enemy:position()) >= 2400 then
+							if SP_dist_check(enemy:position()) then
 								specials_found.spooc = specials_found.spooc or {}
 								table.insert(specials_found.spooc, enemy:position())
 							end
 						end
 						if enemy_chartweak.access == "taser" then
-							if mvector3.distance(chosen_player.coords, enemy:position()) >= 2400 then
+							if SP_dist_check(enemy:position()) then
 								specials_found.taser = specials_found.taser or {}
 								table.insert(specials_found.taser, enemy:position())
 							end
@@ -281,17 +270,17 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 				
 				DelayedCalls:Add("DS_BW_add_3rd_mid_wave_boss", 0.3, function()
 					
-					local plrs = managers.groupai:state():all_player_criminals()
-					if plrs then
-						local boss_target = plrs[table.random_key(plrs)]
-						if boss_target and boss_target.unit and alive(boss_target.unit) then
-							chosen_player.unit = boss_target.unit
-							chosen_player.coords = boss_target.unit:position()
-						end
-					end
-					spawned_boss_3 = spawn_singular_boss(get_boss_spawn_point(), chosen_player.unit)
+					-- local plrs = managers.groupai:state():all_player_criminals()
+					-- if plrs then
+						-- local boss_target = plrs[table.random_key(plrs)]
+						-- if boss_target and boss_target.unit and alive(boss_target.unit) then
+							-- chosen_player.unit = boss_target.unit
+							-- chosen_player.coords = boss_target.unit:position()
+						-- end
+					-- end
+					-- spawned_boss_3 = spawn_singular_boss(get_boss_spawn_point(), chosen_player.unit)
 					
-					if spawned_boss_1 and spawned_boss_2 and spawned_boss_3 and alive(spawned_boss_1) and alive(spawned_boss_2) and alive(spawned_boss_3) then
+					if spawned_boss_1 and spawned_boss_2 and alive(spawned_boss_1) and alive(spawned_boss_2) then
 						if Utils:IsInGameState() and not DS_BW.end_stats_header_printed and self._task_data and self._task_data.assault and self._task_data.assault.phase == "sustain" then
 							
 							DS_BW.Miniboss_info.is_alive = true
@@ -299,17 +288,28 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 							
 							local dmg_resist_str = "50"
 							
-							-- only put full chat messages for first 2 appearances
-							if DS_BW.Miniboss_info.appearances == 0 then
-								DS_BW.CM:public_chat_message("[DS_BW] A new foe has appeared. Global enemy damage resistance of "..dmg_resist_str.."% is now in effect, until your foe is defeated. x_x")
-								DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
-							elseif DS_BW.Miniboss_info.appearances == 1 then
-								DS_BW.CM:public_chat_message("[DS_BW] Devil trio has returned. "..dmg_resist_str.."% global damage resistance is back x_x")
-								DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
-							elseif DS_BW.Miniboss_info.appearances >= 2 then
-								DS_BW.CM:public_chat_message("[DS_BW] x_x")
-								DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
+							-- only put full chat messages for first few appearances
+							
+							DS_BW.Miniboss_info.appearances = DS_BW.Miniboss_info.appearances + 1
+							
+							if DS_BW.kpm_tracker and DS_BW.kpm_tracker.penalties[1].is_perma then
+								DS_BW.CM:public_chat_message("[DS_BW] Devil duo has arrived. Enjoy 75% global damage resistance x_x")
+							else
+								if DS_BW.Miniboss_info.appearances == 1 then
+									dmg_resist_str = "33"
+									DS_BW.CM:public_chat_message("[DS_BW] A new foe has appeared. Global enemy damage resistance of "..dmg_resist_str.."% is now in effect, until your foe is defeated. x_x")
+								-- elseif DS_BW.Miniboss_info.appearances == 1 then
+									-- dmg_resist_str = "33"
+									-- DS_BW.CM:public_chat_message("[DS_BW] Devil trio has returned with "..dmg_resist_str.."% global enemy damage resistance this time x_x")
+								elseif DS_BW.Miniboss_info.appearances == 2 then
+									DS_BW.CM:public_chat_message("[DS_BW] Devil duo has returned with "..dmg_resist_str.."% global enemy damage resistance this time x_x")
+								elseif DS_BW.Miniboss_info.appearances == 3 then
+									DS_BW.CM:public_chat_message("[DS_BW] Devil duo has returned. "..dmg_resist_str.."% global damage resistance is back x_x")
+								elseif DS_BW.Miniboss_info.appearances >= 4 then
+									DS_BW.CM:public_chat_message("[DS_BW] x_x")
+								end
 							end
+							
 						end
 					end
 					
@@ -340,7 +340,7 @@ function GroupAIStateBase:set_difficulty(value)
 	-- this makes anticipation effectively the end of the previous wave, instead of being a begining of the new one
 	
 	local heist_without_recon_1st_wave = false
-	if Global.level_data and Global.level_data.level_id and table.contains(DS_BW.heists_without_1st_assault, Global.level_data.level_id) then
+	if DS_BW.is_hard_heist() then
 		heist_without_recon_1st_wave = true
 	end
 	
@@ -360,10 +360,10 @@ function GroupAIStateBase:set_difficulty(value)
 		-- after x secs we spawn grey and lighter zeal swats untill 1st wave ends
 		-- wave 2 and onward is full power
 		if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
-			local diff_update_delay = 40
+			local diff_update_delay = 25
 			-- why am i making this heist so special
 			if Global.level_data and Global.level_data.level_id == "nmh" then
-				diff_update_delay = 30
+				diff_update_delay = 15
 			end
 			DelayedCalls:Add("DS_BW_update_first_assault_diff_value", diff_update_delay, function()
 				first_assault_update = true
@@ -380,7 +380,7 @@ function GroupAIStateBase:set_difficulty(value)
 		
 	else -- wave 2 and onward
 		if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
-			DelayedCalls:Add("DS_BW_miniboss_spawn_delay", math.random(18,26), function()
+			DelayedCalls:Add("DS_BW_miniboss_spawn_delay", math.random(15,25), function()
 				self:_DSBW_try_spawn_miniboss()
 			end)
 		end
@@ -399,6 +399,7 @@ function GroupAIStateBase:set_difficulty(value)
 			if DS_BW.Miniboss_info.is_alive then
 				DS_BW.Miniboss_info.is_alive = false
 				DS_BW.Miniboss_info.kill_counter = 0
+				managers.groupai:state():set_phalanx_damage_reduction_buff(0)
 				for u_key, u_data in pairs(managers.enemy:all_enemies()) do
 					if u_data.unit:base():char_tweak().tags and table.contains(u_data.unit:base():char_tweak().tags, "DS_BW_tag_miniboss") then
 						if u_data.unit:character_damage().damage_mission then
@@ -409,7 +410,7 @@ function GroupAIStateBase:set_difficulty(value)
 						end
 					end
 				end
-				DS_BW.CM:public_chat_message("[DS_BW] Assault is fading - devil trio and global damage resistance are now gone. Catch a break while you can.")
+				DS_BW.CM:public_chat_message("[DS_BW] Assault is fading - devil duo and global damage resistance are now gone. Catch a break while you can.")
 			else
 				if previous_phase ~= "fade" and DS_BW.Assault_info.number >= 2 then
 					DS_BW.CM:public_chat_message("[DS_BW] Assault is fading - clear and move up.")
@@ -625,6 +626,53 @@ Hooks:PostHook(GroupAIStateBase, "unregister_phalanx_vip", "DS_BW_force_cap_shie
 					unit:brain():set_logic("attack")
 				end
 			end)
+		end
+	end
+	
+end)
+
+Hooks:PostHook(GroupAIStateBase, "on_enemy_unregistered", "DS_BW_GroupAIStateBase_on_enemy_unregistered_post", function(self, unit)
+	
+	if not (Network:is_server() and DS_BW and DS_BW.DS_difficultycheck) then
+		return
+	end
+	
+	-- if enemy is killed close enough to it's spawn point, disable it for a few secs
+	local e_data = self._police[unit:key()]
+	if e_data.assigned_area and unit:character_damage():dead() then
+		local u_data = unit:unit_data()
+		local spawn_point = u_data.mission_element
+		if spawn_point then
+			local spawn_pos = spawn_point:value('position')
+			local u_pos = e_data.m_pos
+			if mvector3.distance(spawn_pos, u_pos) < 500 and math.abs(spawn_pos.z - u_pos.z) < 300 then
+				for area_id, area_data in pairs(self._area_data) do
+					local area_spawn_groups = area_data.spawn_groups
+					if area_spawn_groups then
+						for _, sg_data in ipairs(area_spawn_groups) do
+							if sg_data.spawn_pts then
+								local spawn_point_id = spawn_point._id
+								for _, sp in ipairs(sg_data.spawn_pts) do
+									if sp.mission_element._id == spawn_point_id then
+										local point_delay = 6
+										local delay_t = self._t + point_delay
+										if delay_t > sg_data.delay_t then
+											sg_data.delay_t = delay_t
+											sg_data.DSBW_temp_disabled = true
+											DelayedCalls:Add("DS_BW_reenable_sp_"..tostring(sg_data), point_delay + 0.5, function()
+												if sg_data and sg_data.DSBW_temp_disabled then
+													sg_data.DSBW_temp_disabled = nil
+												end
+											end)
+										end
+										return
+									end
+								end
+							end
+						end
+					end
+				end
+			end
 		end
 	end
 	

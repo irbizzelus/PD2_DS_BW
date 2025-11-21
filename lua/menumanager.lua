@@ -4,7 +4,7 @@ end
 
 Hooks:Add('LocalizationManagerPostInit', 'DS_BW_option_loc', function(loc)
 	DS_BW:Load()
-	loc:load_localization_file(DS_BW._path .. 'menu/DS_BW_menu_en.txt', false)
+	loc:load_localization_file(DS_BW._path .. 'menu/DS_BW_menu_en.json', false)
 end)
 
 -- all the settings that can be changes in the mod's settings in game
@@ -18,6 +18,27 @@ Hooks:Add('MenuManagerInitialize', 'DS_BW_init', function(menu_manager)
 	-- header buttons
 	MenuCallbackHandler.DS_BWcb_donothing = function(this, item)
 		--nothingness
+	end
+	
+	-- gameplay
+	MenuCallbackHandler.DS_BWcb_adapt_diff_announcements = function(this, item)
+		DS_BW.settings.adapt_diff_announcements = tonumber(item:value())
+		DS_BW:Save()
+	end
+	
+	MenuCallbackHandler.DS_BWcb_starting_adapt_diff = function(this, item)
+		DS_BW.settings.starting_adapt_diff = tonumber(item:value())
+		DS_BW:Save()
+	end
+	
+	MenuCallbackHandler.DS_BWcb_always_hard_heists = function(this, item)
+		DS_BW.settings[item:name()] = item:value() == 'on'
+		DS_BW:Save()
+	end
+	
+	MenuCallbackHandler.DWPcb_tasks_per_min_mul = function(this, item)
+		DS_BW.settings.tasks_per_min_mul = tonumber(item:value())
+		DS_BW:Save()
 	end
 	
 	-- info msg
@@ -74,13 +95,19 @@ Hooks:Add('MenuManagerInitialize', 'DS_BW_init', function(menu_manager)
 
 	DS_BW:Load()
 
-	MenuHelper:LoadFromJsonFile(DS_BW._path .. 'menu/DS_BW_menu.txt', DS_BW, DS_BW.settings)
+	MenuHelper:LoadFromJsonFile(DS_BW._path .. 'menu/DS_BW_menu.json', DS_BW, DS_BW.settings)
 end)
 
 -- any time host changes lobby attributes, update lobby name
 Hooks:PostHook(MenuCallbackHandler, "update_matchmake_attributes", "DS_BW_swapname_on_attributes_update", function()
 	if DS_BW.settings.lobbyname then
-		DS_BW.change_lobby_name(DS_BW.DS_difficultycheck)
+		if DWP then
+			if DS_BW.DS_difficultycheck then
+				DS_BW.change_lobby_name(DS_BW.DS_difficultycheck)
+			end
+		else
+			DS_BW.change_lobby_name(DS_BW.DS_difficultycheck)
+		end
 	end
 end)
 
@@ -94,7 +121,11 @@ Hooks:PostHook(MenuCallbackHandler, "start_job", "DS_BW_oncontractbought", funct
 	else
 		DS_BW.DS_difficultycheck = false
 		if DS_BW.settings.lobbyname then
-			DS_BW.change_lobby_name(false)
+			if DWP and DWP.settings.lobbyname then
+				-- let dw+ handle it
+			else
+				DS_BW.change_lobby_name(false)
+			end
 		end
 	end
 end)
@@ -144,7 +175,11 @@ Hooks:PostHook(MenuManager, "_node_selected", "DS_BW:Node", function(self, menu_
 							end
 						else
 							if managers.network.matchmake._lobby_attributes.owner_name ~= managers.network.account:username_id() then
-								DS_BW.change_lobby_name(false)
+								if DWP and DWP.settings.lobbyname then
+									-- let dw+ handle it
+								else
+									DS_BW.change_lobby_name(false)
+								end
 							end
 						end
 					end

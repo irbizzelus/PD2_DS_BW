@@ -7,8 +7,8 @@ Hooks:PreHook(CopBase, "post_init", "DS_BW_CopBase_post_init", function(self)
 			
 			------ AMERICA ------
 			-- SWATS
-			[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {"ak47_ass","m4","m4","s552","benelli","m249"},
-			[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {"r870","s552","s552","mp5_tactical","mp5_tactical","mp5_tactical"},
+			[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {"ak47_ass","m4","s552","s552","ak47_ass","m4","s552","s552","r870"},
+			[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {"saiga","s552","s552","m249","m249","mp5_tactical","mp5_tactical"},
 			-- MEDIC
 			[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()] = {"g36"},
 			[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()] = {"benelli"},
@@ -60,8 +60,8 @@ Hooks:PreHook(CopBase, "post_init", "DS_BW_CopBase_post_init", function(self)
 			
 			------ MURKYWATER ------
 			-- SWATS
-			[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = {"m4","ak47_ass","ak47_ass","scar_murky","benelli","rpk_lmg"},
-			[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = {"r870","scar_murky","scar_murky","ump","akmsu_smg","akmsu_smg"},
+			[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = {"m4","ak47_ass","scar_murky","scar_murky","m4","ak47_ass","scar_murky","scar_murky","r870"},
+			[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = {"saiga","scar_murky","scar_murky","ump","akmsu_smg","rpk_lmg","rpk_lmg"},
 			-- MEDIC
 			[("units/pd2_dlc_bph/characters/ene_murkywater_medic/ene_murkywater_medic"):key()] = {"g36"},
 			[("units/pd2_dlc_bph/characters/ene_murkywater_medic_r870/ene_murkywater_medic_r870"):key()] = {"benelli"},
@@ -75,8 +75,8 @@ Hooks:PreHook(CopBase, "post_init", "DS_BW_CopBase_post_init", function(self)
 			
 			------ FEDERALES ------
 			-- SWATS
-			[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = {"m4","ak47_ass","m4","sg417","benelli","m249"},
-			[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = {"r870","scar_murky","sg417","mac11","mac11","asval_smg"},
+			[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = {"m4","ak47_ass","sg417","sg417","m4","ak47_ass","sg417","sg417","r870"},
+			[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = {"saiga","scar_murky","sg417","mac11","asval_smg","m249","rpk_lmg"},
 			-- MEDIC
 			[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale/ene_swat_medic_policia_federale"):key()] = {"g36"},
 			[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale_r870/ene_swat_medic_policia_federale_r870"):key()] = {"benelli"},
@@ -95,14 +95,14 @@ Hooks:PreHook(CopBase, "post_init", "DS_BW_CopBase_post_init", function(self)
 		
 		if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 3 then
 			if DS_BW._low_spawns_manager.level == 3 then
-				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {"ak47_ass","m4","benelli"}
-				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {"r870","s552","m4"}
+				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {"ak47_ass","m4","r870"}
+				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {"saiga","s552","m249"}
 				weapon_mapping[("units/pd2_dlc_mad/characters/ene_akan_cs_cop_ak47_ass/ene_akan_cs_cop_ak47_ass"):key()] = {"ak47_ass","g36","r870"}
 				weapon_mapping[("units/pd2_dlc_hvh/characters/ene_swat_heavy_hvh_1/ene_swat_heavy_hvh_1"):key()] = {"g36","mini"}
-				weapon_mapping[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = {"m4","ak47_ass","benelli"}
-				weapon_mapping[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = {"r870","scar_murky","m4"}
-				weapon_mapping[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = {"m4","ak47_ass","benelli"}
-				weapon_mapping[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = {"r870","s552","m4"}
+				weapon_mapping[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = {"m4","ak47_ass","r870"}
+				weapon_mapping[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = {"saiga","scar_murky","rpk_lmg"}
+				weapon_mapping[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = {"m4","ak47_ass","r870"}
+				weapon_mapping[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = {"saiga","sg417","m249"}
 			else
 				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {"g36","g36","m249"}
 				weapon_mapping[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {"ak47_ass","g36","m249"}

@@ -1,8 +1,3 @@
--- timer fix for error in vanilla
-Hooks:PreHook(QuickFlashGrenade, "init", "DS_BW_flash_fix", function ()
-	QuickFlashGrenade.States[3][2] = QuickFlashGrenade.States[3][2] or tweak_data.group_ai.flash_grenade.timer
-end)
-
 -- activate firetrap on flashbang explosion - main part
 -- update function is called in about 20 times a second, but we need to only role our nade chance once, so track them
 local DS_BW_flashbang_roll_tracker = {}

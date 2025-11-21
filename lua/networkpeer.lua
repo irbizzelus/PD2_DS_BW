@@ -48,9 +48,10 @@ Hooks:PostHook(NetworkPeer, "set_outfit_string", "DS_BW_set_outfit_string", func
 end)
 
 Hooks:Add("BaseNetworkSessionOnLoadComplete", "DS_BW_onloadcomplete", function(peer, id)
-	-- in case user restarts a match after changing difficulty, update lobby name to appropriate amount of +'s if DS_difficultycheck is true
-	DelayedCalls:Add("DS_BW_updatelobbyname_after_lobby_start_or_restart", 5, function()
-		if managers and managers.network and managers.network._session and managers.network.matchmake and Network:is_server() and Utils:IsInGameState() then
+	-- in case user restarts a match after changing difficulty, update lobby name to appropriate amount of +; - thats what dw+ would do
+	-- dsbw doesnt do anything other than just resets the name again, but, if dw+ is also installed, dsbw will now override dw+'s changes
+	DelayedCalls:Add("DS_BW_updatelobbyname_after_lobby_start_or_restart", 5.25, function()
+		if managers and managers.network and managers.network._session and managers.network.matchmake and Network:is_server() and Utils:IsInGameState() and Global.game_settings and Global.game_settings.difficulty and Global.game_settings.difficulty == "sm_wish" then
 			DS_BW.change_lobby_name(DS_BW.DS_difficultycheck)
 		end
 	end)

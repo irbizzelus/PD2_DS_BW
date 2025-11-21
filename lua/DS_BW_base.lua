@@ -4,9 +4,14 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.2.02" -- this one is used for the welcoming message mainly
-	DS_BW.version_num = 1.2 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
+	DS_BW.version = "1.3" -- this one is used for the welcoming message mainly
+	DS_BW.version_num = 1.3 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
+		-- gameplay
+		always_hard_heists = false,
+		starting_adapt_diff = 1,
+		adapt_diff_announcements = 2,
+		tasks_per_min_mul = 1,
 		-- info msg
 		skills_showcase = 2,
 		hourinfo = true,
@@ -31,7 +36,7 @@ if not DS_BW then
 		appearances = 0,
 		is_alive = false,
 		has_spawned_this_wave = false,
-		spawn_chance = {current = 0.4, increase = 0.15}, -- uses current as base, because it's never resest
+		spawn_chance = {current = 0.1, increase = 0.1}, -- uses current as base, because it's never resest
 		spawn_locations = {}
     }
 	DS_BW.players = {}
@@ -46,6 +51,13 @@ if not DS_BW then
 		}
 	end
 	DS_BW.kpm_tracker = {update_after = -999, kills = {0,0,0,0}, kpm = {0,0,0,0}, penalties = {{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0}}}
+	DS_BW.kpm_tracker.thresholds = {
+		[1] = 10,
+		[2] = 15,
+		[3] = 20,
+		[4] = 40,
+		[5] = 60,
+	}
 	DS_BW.color = Color(255,240,140,35) / 255
 	DS_BW.end_stats_printed = false
 	DS_BW.peers_with_mod = {}
@@ -100,6 +112,80 @@ if not DS_BW then
 				managers.network.matchmake._lobby_attributes.owner_name = new_name
 				managers.network.matchmake.lobby_handler:set_lobby_data(managers.network.matchmake._lobby_attributes)
 			end
+		end
+	end
+	
+	function DS_BW.announce_adapt_diff()
+		if DS_BW._low_spawns_manager and DS_BW.settings.adapt_diff_announcements > 1 then
+			local lvl_str = tostring(DS_BW._low_spawns_manager.level) or "0"
+			if DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Miniboss_info.is_alive then
+				lvl_str = lvl_str.."+(4)"
+			elseif DS_BW._dsbw_new_winter_penalty_applied_ang_going or DS_BW.Miniboss_info.is_alive then
+				lvl_str = lvl_str.."+(2)"
+			end
+			local msg = "Adaptive difficulty level: "..lvl_str
+			if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then
+				if DS_BW.settings.adapt_diff_announcements == 3 then
+					DS_BW.CM:public_chat_message("[DS_BW] "..msg)
+				elseif DS_BW.settings.adapt_diff_announcements == 2 then
+					DS_BW.CM:private_chat_message(1, msg)
+					LuaNetworking:SendToPeersExcept(1, "DS_BW_sync", "ADU_"..tostring(lvl_str))
+				end
+			end
+		end
+	end
+	
+	function DS_BW.is_hard_heist()
+		-- most heists will follow a rule where first assault is easier then 2nd and onward.
+		-- sometimes however, it makes no logicas sense to have 'recon' easy assaults at the begining because a heist could be a set up (like alaska)
+		-- in such cases we skip first assault. also aplies to heists that are in general slower paced at the start (like harvest and trustee branchbank)
+		local heists = {
+			"branchbank",
+			"rvd1", -- reserviour dogs
+			"rvd2",
+			"nail", -- haloween heists
+			"hvh",
+			"help",
+			"firestarter_1", -- mhm
+			"firestarter_2",
+			"firestarter_3",
+			"watchdogs_1_night",
+			"watchdogs_1",
+			"watchdogs_2",
+			"watchdogs_2_day",
+			"alex_3", -- rats 3
+			"pex", -- breakfast in tihuana
+			"bph", -- hell's island
+			"brb", -- Brooklyn bank
+			"vit", -- white house
+			"hox_1", -- breakout
+			"hox_2",
+			"framing_frame_2", -- mhm
+			"chew", -- biker heist day 2
+			"pines", -- vlad's white xmas
+			"run", -- heat street
+			"man", -- undercover
+			"firestarter_3", -- mhm
+			"mad", -- boil point
+			"wwh", -- alaska
+			"mallcrasher", -- alaska, trust me bro
+			"peta2", -- goats
+			"escape_overpass",
+			"escape_overpass_night",
+			"escape_park",
+			"escape_park_day",
+			"escape_cafe",
+			"escape_cafe_day",
+			"escape_street",
+			"escape_garage",
+		}
+		
+		if DS_BW.settings.always_hard_heists then
+			return true
+		elseif Global.level_data and Global.level_data.level_id and (table.contains(heists, Global.level_data.level_id)) then
+			return true
+		else
+			return false
 		end
 	end
 	
@@ -228,7 +314,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = tostring(DS_BW.version).." REVAMP\n\nThis mod has moved from the previous 50% global damage resistance version to a new, fully rebalanced version of itself. The damage resistance feature was reworked and is not part of a new \"Adaptable difficulty\" feature, while most other features were either left intact or were updated slightly. Overall enemy presence was also increased, so instead of having less enemies with more health you now have more enemies with slightly lower damaging weapons. If you dislike this new version, you may download older version on Modworkshop, but if you ask me - this version is way more fun.\nCheck full changelog for a more detailed breakdown."
+				local message = tostring(DS_BW.version).."Changelog:\n\n- Added new gameplay settings to DSBW options menu.\n- Fixed and reworked adaptive difficulties in a few ways.\n- Updated enemy action speed and weapon usage.\n- Sped up assault pacing.\n- Miniboss spawn chances and overall threat reduced.\nCheck full changelog for more info."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
@@ -240,6 +326,15 @@ if not DS_BW then
 	function DS_BW:welcomemsg1(peer_id) -- welcome message for clients
 		if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "Hello_"..tostring(DS_BW.version))
+			if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 1 and DS_BW.settings.adapt_diff_announcements > 1 then
+				local lvl_str = tostring(DS_BW._low_spawns_manager.level) or "0"
+				if DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Miniboss_info.is_alive then
+					lvl_str = lvl_str.."+(4)"
+				elseif DS_BW._dsbw_new_winter_penalty_applied_ang_going or DS_BW.Miniboss_info.is_alive then
+					lvl_str = lvl_str.."+(2)"
+				end
+				LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "ADU_"..tostring(lvl_str))
+			end
 			DelayedCalls:Add("DS_BW:welcomemsg1topeer_" .. tostring(peer_id), 1.2, function()
 				local peer = managers.network:session():peer(peer_id)
 				
@@ -283,8 +378,8 @@ if not DS_BW then
 						DS_BW.players[peer_id].welcome_msg2_shown = true
 						if not DS_BW.peers_with_mod[peer_id] then
 							peer:send("send_chat_message", ChatManager.GAME, "\n- Enemies have resistance to the ECM STUN effect: /ecm\n- It's MUCH harder to make enemies surrender: /dom\n- Enemies can now HANDCUFF you during interactions: /cuffs\n- Enemy variety, behavior, and used weapons were altered: /cops and /weapons")
-							peer:send("send_chat_message", ChatManager.GAME, "\n- After detonation flashbangs can now EXPLODE, or create a FIRE field, damaging players: /flash\n- Assault pacing was altered: /assault\n- Swat turrets will no longer self-repair :)")
-							peer:send("send_chat_message", ChatManager.GAME, "Chat commands will provide private messages with additional information on mentioned changes. Bring your best build and good luck.")
+							peer:send("send_chat_message", ChatManager.GAME, "\n- After detonation flashbangs can now EXPLODE, or create a fire field, damaging players: /flash\n- Assault pacing was altered: /assault\n- Swat turrets will no longer self-repair :)")
+							peer:send("send_chat_message", ChatManager.GAME, "Chat commands will provide private messages with additional information on mentioned changes. Bring your BEST build and good luck.")
 							if DS_BW and not MenuCallbackHandler:is_modded_client() then
 								peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
 							end

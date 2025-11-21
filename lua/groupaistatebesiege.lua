@@ -83,7 +83,7 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 							sp.delay_t = 0
 						end
 					else -- otherwise spawn slighlty faster then vanila, and slightly slower then vanila when boss is present
-						if sp.interval then
+						if sp.interval and not sp.DSBW_temp_disabled then
 							if DS_BW.Miniboss_info.is_alive and sp.interval ~= 1.25 then
 								sp.interval = 1.25
 							elseif sp.interval ~= 2.5 then
@@ -114,66 +114,111 @@ function GroupAIStateBesiege:apply_DS_BW_dmg_reduction_loop()
 		self._DS_BW_dmg_reduction = true
 	end
 	
+	local force_pool = self:_get_difficulty_dependent_value(self._tweak_data.assault.force_pool) * self:_get_balancing_multiplier(self._tweak_data.assault.force_pool_balance_mul)
+	local task_spawn_allowance = force_pool - ((self._hunt_mode and 0) or (self._task_data.assault.force_spawned or 0))
+	if self._task_data.assault.phase == "fade" and task_spawn_allowance <= 0 then
+		if not DS_BW.fade_started_prematurely and DS_BW._low_spawns_manager then
+			DS_BW.fade_started_prematurely = true
+			if (self._dsbw_cap_spawned_at_wave or -69) ~= DS_BW.Assault_info.number and DS_BW._low_spawns_manager.level <=2 then
+				DS_BW._low_spawns_manager.level = DS_BW._low_spawns_manager.level + 1
+				if DS_BW._low_spawns_manager.level > 5 then
+					DS_BW._low_spawns_manager.level = 5
+				end
+				DS_BW._low_spawns_manager.detected_low = false
+				DS_BW._low_spawns_manager.detected_high = false
+				DS_BW._low_spawns_manager.adjustment_cooldown = Application:time()
+				DS_BW.announce_adapt_diff()
+			end
+		end
+	elseif self._task_data.assault.phase ~= "fade" then
+		DS_BW.fade_started_prematurely = false
+	end
+	
+	if self._task_data.assault.phase == "fade" then
+		DelayedCalls:Add("DS_BW_despawn_captain_after_fade", 40, function()
+			-- despawn cap if he hangs around for too long
+			for u_key, u_data in pairs(managers.enemy:all_enemies()) do
+				local unit = u_data.unit
+				if unit and alive(unit) and unit:base() and unit:base():char_tweak() and unit:base():char_tweak().tags and table.contains(unit:base():char_tweak().tags, "DS_BW_tag_reinforced_shield_VIP") then
+					World:delete_unit(unit)
+					self:phalanx_despawned()
+					log("[DS_BW] Despawned captain after fade, cause he hanged around for too long.")
+					break
+				end
+			end
+		end)
+	end
+	
 	-- if our wanted dmg reduction is higher then this variable, game will try to increase it automaticaly to the max as if winters is alive. but since he isnt, game crashes.
 	tweak_data.group_ai.phalanx.vip.damage_reduction.max = 0
 	-- values slightly lower then 0.5 and 0.666 to avoid accidental damage breakpoint fuckery for everyone invloved, in case base games calculations round damage weirdly
 	local dmg_resist_amount = 0
 	if DS_BW.Miniboss_info.is_alive or DS_BW._dsbw_new_winter_penalty_applied_ang_going then
 		dmg_resist_amount = 0.49
+		if DS_BW.Miniboss_info.is_alive and not DS_BW._dsbw_new_winter_penalty_applied_ang_going then
+			-- if DS_BW.Miniboss_info.appearances == 1 then
+				-- dmg_resist_amount = 0.25
+			-- end
+			if DS_BW.Miniboss_info.appearances == 1 then
+				dmg_resist_amount = 0.33
+			end
+		end
+		if DS_BW.kpm_tracker and DS_BW.kpm_tracker.penalties[1].is_perma then
+			dmg_resist_amount = 0.75
+		end
 	end
 	
 	if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level and not DS_BW._dsbw_new_winter_penalty_applied_ang_going then
+		-- max on the map
 		tweak_data.group_ai.besiege.assault.force_balance_mul = {
-			1 + DS_BW._low_spawns_manager.level * 0.1,
-			1 + DS_BW._low_spawns_manager.level * 0.1,
-			1 + DS_BW._low_spawns_manager.level * 0.1,
-			1 + DS_BW._low_spawns_manager.level * 0.1
+			1 + DS_BW._low_spawns_manager.level * 0.25,
+			1 + DS_BW._low_spawns_manager.level * 0.25,
+			1 + DS_BW._low_spawns_manager.level * 0.25,
+			1 + DS_BW._low_spawns_manager.level * 0.25
 		}
 		self._task_data.assault.force = math.ceil(self:_get_difficulty_dependent_value(self._tweak_data.assault.force) * self:_get_balancing_multiplier(self._tweak_data.assault.force_balance_mul))
+		-- total per wave
+		tweak_data.group_ai.besiege.assault.force_pool_balance_mul = {
+			1 + DS_BW._low_spawns_manager.level * 0.15,
+			1 + DS_BW._low_spawns_manager.level * 0.15,
+			1 + DS_BW._low_spawns_manager.level * 0.15,
+			1 + DS_BW._low_spawns_manager.level * 0.15
+		}
+		self._task_data.assault.force_pool = math.ceil(self:_get_difficulty_dependent_value(self._tweak_data.assault.force_pool) * self:_get_balancing_multiplier(self._tweak_data.assault.force_pool_balance_mul))
 	end
 	
 	if dmg_resist_amount == 0 and DS_BW.kpm_tracker then
-		-- since is_perma only used as the final lvl 5 penalty for the whole team, just check the host, whatever
-		if DS_BW.kpm_tracker.penalties[1].is_perma then
-			self:set_phalanx_damage_reduction_buff(0.33)
-			if DS_BW.kpm_tracker.penalties[1].was_notified_of ~= -69 then
-				DS_BW.kpm_tracker.penalties[1].was_notified_of = -69 -- if host already has 33% penalty when level 5 comes, public message shall still be sent, so use this as the is_perma identifier
-				local msg = "Team performance was just re-evaluated, and deemed way too high. Congrautlations. All enemies now have a permanent 33% damage resistance against all players."
-				DS_BW.CM:public_chat_message(msg)
+		-- host
+		local law1team = self:_get_law1_team()
+		local damage_reduction = DS_BW.kpm_tracker.penalties[1].amount or -1
+		if law1team then
+			if damage_reduction > 0 then
+				law1team.damage_reduction = damage_reduction
+			else
+				law1team.damage_reduction = nil
 			end
-		else
-			-- host
-			local law1team = self:_get_law1_team()
-			local damage_reduction = DS_BW.kpm_tracker.penalties[1].amount or -1
-			if law1team then
-				if damage_reduction > 0 then
-					law1team.damage_reduction = damage_reduction
-				else
-					law1team.damage_reduction = nil
-				end
-				self:set_damage_reduction_buff_hud()
+			self:set_damage_reduction_buff_hud()
+		end
+		if DS_BW.kpm_tracker.penalties[1].amount ~= DS_BW.kpm_tracker.penalties[1].was_notified_of then
+			DS_BW.kpm_tracker.penalties[1].was_notified_of = DS_BW.kpm_tracker.penalties[1].amount
+			local msg = "Your performance was just re-evaluated. All enemies now have "..tostring(DS_BW.kpm_tracker.penalties[1].amount * 100).."% damage resistance against you personally: /dmg"
+			if DS_BW.kpm_tracker.penalties[1].amount == 0 then
+				msg = "Your performance was just re-evaluated. Enemies no longer have any personal damage resistance against you."
 			end
-			if DS_BW.kpm_tracker.penalties[1].amount ~= DS_BW.kpm_tracker.penalties[1].was_notified_of then
-				DS_BW.kpm_tracker.penalties[1].was_notified_of = DS_BW.kpm_tracker.penalties[1].amount
-				local msg = "Your performance was just re-evaluated. All enemies now have "..tostring(DS_BW.kpm_tracker.penalties[1].amount * 100).."% damage resistance against you personally: /dmg"
-				if DS_BW.kpm_tracker.penalties[1].amount == 0 then
-					msg = "Your performance was just re-evaluated. Enemies no longer have any personal damage resistance against you."
-				end
-				DS_BW.CM:private_chat_message(1, msg)
-			end
-			-- clients
-			for i=2,4 do
-				local peer = managers.network:session() and managers.network:session():peer(i)
-				if peer then
-					peer:send_queued_sync("sync_damage_reduction_buff", DS_BW.kpm_tracker.penalties[i].amount)
-					if DS_BW.kpm_tracker.penalties[i].amount ~= DS_BW.kpm_tracker.penalties[i].was_notified_of then
-						DS_BW.kpm_tracker.penalties[i].was_notified_of = DS_BW.kpm_tracker.penalties[i].amount
-						local msg = "[DSBW-Private message] Your performance was just re-evaluated. All enemies now have "..tostring(DS_BW.kpm_tracker.penalties[i].amount * 100).."% damage resistance against you personally: /dmg"
-						if DS_BW.kpm_tracker.penalties[i].amount == 0 then
-							msg = "[DSBW-Private message] Your performance was just re-evaluated. Enemies no longer have any personal damage resistance against you."
-						end
-						DS_BW.CM:private_chat_message(i, msg)
+			DS_BW.CM:private_chat_message(1, msg)
+		end
+		-- clients
+		for i=2,4 do
+			local peer = managers.network:session() and managers.network:session():peer(i)
+			if peer then
+				peer:send_queued_sync("sync_damage_reduction_buff", DS_BW.kpm_tracker.penalties[i].amount)
+				if DS_BW.kpm_tracker.penalties[i].amount ~= DS_BW.kpm_tracker.penalties[i].was_notified_of then
+					DS_BW.kpm_tracker.penalties[i].was_notified_of = DS_BW.kpm_tracker.penalties[i].amount
+					local msg = "[DSBW-Private message] Your performance was just re-evaluated. All enemies now have "..tostring(DS_BW.kpm_tracker.penalties[i].amount * 100).."% damage resistance against you personally: /dmg"
+					if DS_BW.kpm_tracker.penalties[i].amount == 0 then
+						msg = "[DSBW-Private message] Your performance was just re-evaluated. Enemies no longer have any personal damage resistance against you."
 					end
+					DS_BW.CM:private_chat_message(i, msg)
 				end
 			end
 		end
@@ -216,8 +261,9 @@ function GroupAIStateBesiege:apply_DS_BW_dmg_reduction_loop()
 		if not is_boss_unit_found then
 			DS_BW.Miniboss_info.is_alive = false
 			DS_BW.Miniboss_info.kill_counter = 0
+			self:set_phalanx_damage_reduction_buff(0)
 			if not DS_BW.end_stats_header_printed then -- if bosses dissapear but we are at the game over screen, dont send messages
-				DS_BW.CM:public_chat_message("[DS_BW] Devil trio is gone, global enemy damage resistance removed.")
+				DS_BW.CM:public_chat_message("[DS_BW] Devil duo is gone, global enemy damage resistance removed.")
 			end
 		end
 	end
@@ -352,7 +398,7 @@ local dsbw_orig_besiege_phalanx_spawn = GroupAIStateBesiege._spawn_phalanx
 Hooks:OverrideFunction(GroupAIStateBesiege, "_spawn_phalanx", function (self)
 	if DS_BW and DS_BW.DS_difficultycheck then
 		-- prevent cap spawn for the first x seconds of an assault
-		if DS_BW.Assault_info and (DS_BW.Assault_info.phase ~= "sustain" or DS_BW.Assault_info.latest_starting_time + 200 > Application:time()) then
+		if DS_BW.Assault_info and (DS_BW.Assault_info.phase ~= "sustain" or DS_BW.Assault_info.latest_starting_time + 180 > Application:time()) then
 			return
 		end
 		
@@ -411,20 +457,24 @@ Hooks:OverrideFunction(GroupAIStateBesiege, "_spawn_phalanx", function (self)
 					
 					-- warn
 					DS_BW.CM:public_chat_message("[DS_BW] Welcome, Cpt. Winters.")
-					-- in case new spawns somehow break captain, disable endless wave 5 minutes after spawn
-					DelayedCalls:Add("DS_BW_clear_winters_just_in_case", 300, function()
-						if not DS_BW._dsbw_new_winter_penalty_applied_ang_going then
+					-- in case new spawns somehow break captain, disable endless wave few minutes after spawn
+					self._dsbw_cap_spawned_at_wave = DS_BW.Assault_info.number
+					DelayedCalls:Add("DS_BW_clear_winters_just_in_case", 240, function()
+						if not DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Assault_info.number == self._dsbw_cap_spawned_at_wave and DS_BW.Assault_info.phase ~= nil and DS_BW.Assault_info.phase ~= "anticipation" then
 							local mgs = managers.groupai:state()
 							local phalanx_minion_count = mgs:get_phalanx_minion_count()
 							local min_count_minions = tweak_data.group_ai.phalanx.minions.min_count
 							if phalanx_minion_count > 0 and phalanx_minion_count <= min_count_minions then
+								log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 								mgs:unregister_phalanx_vip()
 								mgs:set_assault_endless(false)
 							elseif phalanx_minion_count and phalanx_minion_count == 0 then
+								log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 								mgs:unregister_phalanx_vip()
 								mgs:set_assault_endless(false)
 							end
 							if not self:phalanx_vip() then
+								log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 								mgs:unregister_phalanx_vip()
 								mgs:set_assault_endless(false)
 							end
@@ -436,19 +486,23 @@ Hooks:OverrideFunction(GroupAIStateBesiege, "_spawn_phalanx", function (self)
 			dsbw_orig_besiege_phalanx_spawn(self)
 			if DS_BW and DS_BW.DS_difficultycheck then
 				-- in case new spawns somehow break captain, disable endless wave few minutes after spawn
-				DelayedCalls:Add("DS_BW_clear_winters_just_in_case", 240, function()
-					if not DS_BW._dsbw_new_winter_penalty_applied_ang_going then
+				self._dsbw_cap_spawned_at_wave = DS_BW.Assault_info.number
+				DelayedCalls:Add("DS_BW_clear_winters_just_in_case", 180, function()
+					if not DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Assault_info.number == self._dsbw_cap_spawned_at_wave and DS_BW.Assault_info.phase ~= nil and DS_BW.Assault_info.phase ~= "anticipation" then
 						local mgs = managers.groupai:state()
 						local phalanx_minion_count = mgs:get_phalanx_minion_count()
 						local min_count_minions = tweak_data.group_ai.phalanx.minions.min_count
 						if phalanx_minion_count > 0 and phalanx_minion_count <= min_count_minions then
+							log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 							mgs:unregister_phalanx_vip()
 							mgs:set_assault_endless(false)
 						elseif phalanx_minion_count and phalanx_minion_count == 0 then
+							log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 							mgs:unregister_phalanx_vip()
 							mgs:set_assault_endless(false)
 						end
 						if not self:phalanx_vip() then
+							log("[DS_BW] Cleared captain's spawn via _spawn_phalanx DelayedCalls.")
 							mgs:unregister_phalanx_vip()
 							mgs:set_assault_endless(false)
 						end

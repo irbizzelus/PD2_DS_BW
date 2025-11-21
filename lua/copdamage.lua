@@ -30,17 +30,17 @@ Hooks:PreHook(CopDamage, "die", "DS_BW_CopDamage_die_pre", function(self,attack_
 		local boss = DS_BW.Miniboss_info
 		if boss.is_alive then
 			boss.kill_counter = boss.kill_counter + 1
-			if boss.kill_counter == 1 and boss.appearances <= 1 then
-				DS_BW.CM:public_chat_message("[DS_BW] 1 down, 2 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
+			if boss.kill_counter == 1 and boss.appearances <= 2 then
+				DS_BW.CM:public_chat_message("[DS_BW] 1 down, 1 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
 			end
-			if boss.kill_counter == 2 and boss.appearances <= 1 then
-				DS_BW.CM:public_chat_message("[DS_BW] 2 down, 1 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
-			end
-			if boss.kill_counter == 3 then
+			-- if boss.kill_counter == 2 and boss.appearances <= 1 then
+				-- DS_BW.CM:public_chat_message("[DS_BW] 2 down, 1 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
+			-- end
+			if boss.kill_counter == 2 then
 				if boss.appearances <= 1 then
-					DS_BW.CM:public_chat_message("[DS_BW] Trio defeated and global enemy damage resistance is now gone. Well done.")
+					DS_BW.CM:public_chat_message("[DS_BW] Duo defeated and global enemy damage resistance is now gone. Well done.")
 				else
-					DS_BW.CM:public_chat_message("[DS_BW] Trio was defeated. For now.")
+					DS_BW.CM:public_chat_message("[DS_BW] Duo was defeated. For now.")
 				end
 				boss.is_alive = false
 				boss.kill_counter = 0
@@ -80,10 +80,10 @@ Hooks:PostHook(CopDamage, "_on_damage_received", "DS_BW_CopDamage_on_damage_rece
 		function DS_BW:update_kpm_stats()
 			if Application:time() > DS_BW.kpm_tracker.update_after then
 				if DS_BW.Assault_info and (DS_BW.Assault_info.phase == "build" or DS_BW.Assault_info.phase == "sustain") then
-					DS_BW.kpm_tracker.update_after = Application:time() + 40
+					DS_BW.kpm_tracker.update_after = Application:time() + 30
 					for i=1,4 do
 						if DS_BW.kpm_tracker.kills[i] > 0 then
-							DS_BW.kpm_tracker.kpm[i] = DS_BW.kpm_tracker.kills[i] * 1.5
+							DS_BW.kpm_tracker.kpm[i] = DS_BW.kpm_tracker.kills[i] * 2
 						else
 							DS_BW.kpm_tracker.kpm[i] = 0
 						end
@@ -98,7 +98,7 @@ Hooks:PostHook(CopDamage, "_on_damage_received", "DS_BW_CopDamage_on_damage_rece
 		
 		if killer_unit and not CopDamage.is_civilian(self._unit:base()._tweak_table) then
 			local killer_id = managers.network:session():peer_by_unit(killer_unit) and managers.network:session():peer_by_unit(killer_unit):id()
-			if killer_id and DS_BW.Assault_info and (DS_BW.Assault_info.phase == "build" or DS_BW.Assault_info.phase == "sustain") then
+			if killer_id and Application:time() < DS_BW.kpm_tracker.update_after then
 				DS_BW.kpm_tracker.kills[killer_id] = DS_BW.kpm_tracker.kills[killer_id]+1
 			end
 			DS_BW:update_kpm_stats()
