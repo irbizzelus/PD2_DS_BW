@@ -1258,9 +1258,9 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		
 		-- Max cop amount on the map at the same time, depends on diff
 		self.besiege.assault.force = {
-			24,
-			28,
-			34
+			20,
+			26,
+			30
 		}
 		-- adjusments for it based on the map
 		if Global and Global.level_data then
@@ -1283,10 +1283,6 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 				kenaz = 1.1,
 				-- stealing xmas
 				moon = 1.1,
-				-- mountain master
-				pent = 0.85,
-				-- big oil day 2
-				welcome_to_the_jungle_2 = 0.95,
 			}
 			
 			local lvl_id = Global.level_data.level_id
@@ -1313,14 +1309,14 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.force_pool = {
 				40,
-				275,
-				275
+				250,
+				250
 			}
 		else
 			self.besiege.assault.force_pool = {
 				40,
-				180,
-				180
+				160,
+				160
 			}
 		end
 		
@@ -1528,13 +1524,13 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		},
 		tac_bull_rush = { -- Squad_Tank
 			0,
-			0.05,
-			0.064 -- 0.08
+			0.044, -- 0.05
+			0.056 -- 0.064
 		},
 		Squad_Tank_Annoying = {
 			0,
 			0,
-			0.056 -- 0.07
+			0.048 -- 0.056
 		},
 		FBI_spoocs = {
 			0,

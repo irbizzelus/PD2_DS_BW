@@ -61,10 +61,10 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 							end
 						else
 							if sp.interval then
-								if DS_BW.Miniboss_info.is_alive and sp.interval ~= 0.5 then
-									sp.interval = 0.5
-								elseif sp.interval ~= 1 then
-									sp.interval = 1
+								if DS_BW.Miniboss_info.is_alive and sp.interval ~= 1.75 then
+									sp.interval = 1.75
+								elseif sp.interval ~= 4 then
+									sp.interval = 4
 								end
 							end
 						end
@@ -84,10 +84,10 @@ Hooks:PostHook(GroupAIStateBesiege, "_upd_assault_task", "DS_BW_updassault", fun
 						end
 					else -- otherwise spawn slighlty faster then vanila, and slightly slower then vanila when boss is present
 						if sp.interval and not sp.DSBW_temp_disabled then
-							if DS_BW.Miniboss_info.is_alive and sp.interval ~= 1.25 then
-								sp.interval = 1.25
-							elseif sp.interval ~= 2.5 then
-								sp.interval = 2.5
+							if DS_BW.Miniboss_info.is_alive and sp.interval ~= 3 then
+								sp.interval = 3
+							elseif sp.interval ~= 6 then
+								sp.interval = 6
 							end
 						end
 					end
@@ -534,7 +534,25 @@ Hooks:OverrideFunction(GroupAIStateBesiege, "_choose_best_group", function (self
 		rand_wgt = rand_wgt - candidate.wght
 
 		if rand_wgt <= 0 then
-			self._spawn_group_timers[spawn_group_id(candidate.group)] = TimerManager:game():time() + 0.5 -- lol
+			
+			-- player based respawn delays, ignoring bots. will most likely not feel extremely impactful due to other changes to enemy spawns in the mod,
+			-- but making it a tad easier for 1-2 players was kinda needed
+			local delay = 3
+			local nr_players = 0
+			for u_key, u_data in pairs(self:all_player_criminals()) do
+				if not u_data.status then
+					nr_players = nr_players + 1
+				end
+			end
+			if nr_players <= 2 then
+				if nr_players == 1 then
+					delay = 8
+				else
+					delay = 5
+				end
+			end
+			
+			self._spawn_group_timers[spawn_group_id(candidate.group)] = TimerManager:game():time() + delay
 
 			best_grp = candidate.group
 			best_grp_type = candidate.group_type

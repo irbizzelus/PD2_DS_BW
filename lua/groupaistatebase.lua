@@ -90,11 +90,11 @@ function GroupAIStateBase:_DSBW_try_spawn_miniboss()
 		if assault_num == 1 and self._hunt_mode then
 			return true
 		elseif Global.level_data and Global.level_data.level_id and DS_BW.is_hard_heist() then
-			if assault_num >= 1 then
+			if assault_num >= 2 then
 				result = true
 			end
 		else
-			if assault_num >= 2 then
+			if assault_num >= 3 then
 				result = true
 			end
 		end
@@ -423,6 +423,12 @@ function GroupAIStateBase:set_difficulty(value)
 				tweak_data.group_ai.besiege.assault.force = DS_BW.base_groupaitweak_values.assault_force
 				tweak_data.group_ai.special_unit_spawn_limits = DS_BW.base_groupaitweak_values.special_limits
 			end
+			-- clear a delayed call responsible for removing endless assault in case winters breaks somehow. normally its activated 3-4 minutes after cap spawns
+			-- and checks if he is still existent, and if not, disables endless assault if its currently endless. problem is that some maps have scripted endless waves
+			-- and they dont seem to have different flags, so this should hopefuly prevent scripted endless assaults getting stopped by this safety call
+			DelayedCalls:Add("DS_BW_clear_winters_just_in_case", 0, function()
+				-- nada
+			end)
 		end
 		previous_phase = self._task_data.assault.phase
 	end
@@ -631,6 +637,20 @@ Hooks:PostHook(GroupAIStateBase, "unregister_phalanx_vip", "DS_BW_force_cap_shie
 	
 end)
 
+Hooks:PostHook(GroupAIStateBase, "on_enemy_registered", "DS_BW_GroupAIStateBase_on_enemy_registered_post", function(self, unit)
+	
+	if not (Network:is_server() and DS_BW and DS_BW.DS_difficultycheck) then
+		return
+	end
+	
+	if unit and unit:unit_data() then
+		if not unit:unit_data()._DSBW_unit_spawned_at then
+			unit:unit_data()._DSBW_unit_spawned_at = Application:time()
+		end
+	end
+	
+end)
+
 Hooks:PostHook(GroupAIStateBase, "on_enemy_unregistered", "DS_BW_GroupAIStateBase_on_enemy_unregistered_post", function(self, unit)
 	
 	if not (Network:is_server() and DS_BW and DS_BW.DS_difficultycheck) then
@@ -645,7 +665,14 @@ Hooks:PostHook(GroupAIStateBase, "on_enemy_unregistered", "DS_BW_GroupAIStateBas
 		if spawn_point then
 			local spawn_pos = spawn_point:value('position')
 			local u_pos = e_data.m_pos
-			if mvector3.distance(spawn_pos, u_pos) < 500 and math.abs(spawn_pos.z - u_pos.z) < 300 then
+			local function spawned_recently_enough() -- in case bots didnt move away from their spawn point quickly enough for some reason
+				if u_data and u_data._DSBW_unit_spawned_at and (Application:time() - u_data._DSBW_unit_spawned_at) < 10 then
+					return true
+				else
+					return false
+				end
+			end
+			if mvector3.distance(spawn_pos, u_pos) < 500 and math.abs(spawn_pos.z - u_pos.z) < 300 and spawned_recently_enough() then
 				for area_id, area_data in pairs(self._area_data) do
 					local area_spawn_groups = area_data.spawn_groups
 					if area_spawn_groups then
@@ -654,9 +681,15 @@ Hooks:PostHook(GroupAIStateBase, "on_enemy_unregistered", "DS_BW_GroupAIStateBas
 								local spawn_point_id = spawn_point._id
 								for _, sp in ipairs(sg_data.spawn_pts) do
 									if sp.mission_element._id == spawn_point_id then
-										local point_delay = 6
+										local point_delay = 10.5
+										if Global.level_data and Global.level_data.level_id == "nmh" then
+											point_delay = 4
+										end
+										if Global.level_data and Global.level_data.level_id == "flat" then
+											point_delay = 7
+										end
 										local delay_t = self._t + point_delay
-										if delay_t > sg_data.delay_t then
+										if delay_t > sg_data.delay_t and not sg_data.DSBW_temp_disabled then -- if SP is already blocked, dont block it again, cuz otherwise players would be able to manipulate delays for up to 20ish seconds if timed well enough. prob wouldnt be that broken in general, but some map's spawn points are just fucked beyond reason
 											sg_data.delay_t = delay_t
 											sg_data.DSBW_temp_disabled = true
 											DelayedCalls:Add("DS_BW_reenable_sp_"..tostring(sg_data), point_delay + 0.5, function()

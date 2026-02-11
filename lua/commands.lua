@@ -64,14 +64,9 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("weapons", {
 		callback = function(sender)
-			local msg_1 = "Heavy swat have 44% chance to use a 225-dmg rifle with no fall off, 44% chance to use a 150-dmg rifle with no fall off, and 12% chance for a 525-dmg shotgun with fall off."
-			local msg_2 = "Light swat have 29% chance to use a 67.5-dmg SMG with no fall off, 29% chance for a 150-dmg rifle with no fall off, 29% chance for a 80-dmg LMG with fall off and 14% chance for a 225-dmg shotgun with fall off."
-			local msg_3 = "Most special units use weapons with higher damage. All bulldozers now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect. As the game progresses, enemies may start using higher damaging weapons more often."
-			if Global and Global.level_data and Global.level_data.level_id == "mad" then
-				msg_1 = "Heavy swat was replaced with a super light unit who has a 40% chance to use a 225-dmg rifle with no fall off, 40% chance to use a 375-dmg rifle with no fall off, and 20% chance for a 525-dmg shotgun with fall off."
-				msg_2 = "Light swat was replaced with a heavy unit who has a 50% chance to use a 80-dmg minigun with fall off or a 50% chance for a 100-dmg rifle with no fall off."
-				msg_3 = "Most special units use weapons with slightly higher damage. All bulldozer types now use deadlier weapons, and can sometimes use the VD12 shotgun with flashbang-like stunning effect."
-			end
+			local msg_1 = "All enemies now have a vareity of weapons they can use. To balance out increased enemy spawn rates, enemies will initialy use lower damaging weapons, but depending on how well your team performs, enemies may start using weapons with higher damage outputs."
+			local msg_2 = "Special enemies start with higher damaging weapons, and some can rarely utilize the VD12 shotgun with flashbang-like stunning effect. Examples of weapon types used by common light/heavy SWAT's:"
+			local msg_3 = "| 67.5 damage SMG's without damage fall off | 80 dmg LMG's with fall off | 150 dmg rifles without fall off | 225 dmg rifles without fall off | 375 dmg rifles without fall off | 225 dmg shotguns with fall off | 525 dmg shotguns with fall off |"
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg_1)
 				DS_BW.CM:private_chat_message(sender:id(), msg_2)

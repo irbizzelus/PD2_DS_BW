@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.3" -- this one is used for the welcoming message mainly
-	DS_BW.version_num = 1.3 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
+	DS_BW.version = "1.4" -- this one is used for the welcoming message mainly
+	DS_BW.version_num = 1.4 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- gameplay
 		always_hard_heists = false,
@@ -314,7 +314,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = tostring(DS_BW.version).."Changelog:\n\n- Added new gameplay settings to DSBW options menu.\n- Fixed and reworked adaptive difficulties in a few ways.\n- Updated enemy action speed and weapon usage.\n- Sped up assault pacing.\n- Miniboss spawn chances and overall threat reduced.\nCheck full changelog for more info."
+				local message = tostring(DS_BW.version).." Changelog:\n\n- Updated enemy weapon usage to reduce overall damage outputs\n- Reduced enemy respawn rates and presence to compensate faster enemy reaction speeds and weapon usage\n- Reduced bulldozer spawn chances by roughly 12%\n- Made improvements to the anti-spawn-camp system\n\nMost changes are targeted at making lower adaptive difficulty levels and solo play easier, while maintaining potential chaos of higher levels."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
