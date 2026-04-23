@@ -18,18 +18,13 @@
 			"callback" : "DS_BWcb_donothing"
 		},
 		{
-			"type" : "multiple_choice",
+			"type" : "toggle",
 			"id" : "DS_BW_adapt_diff_announcements",
 			"title" : "DS_BW_adapt_diff_announcements",
 			"description" : "DS_BW_adapt_diff_announcements_desc",
-			"callback" : "DS_BWcb_adapt_diff_announcements",
-			"items" : [
-				"DS_BW_adapt_diff_announcements_1",
-				"DS_BW_adapt_diff_announcements_2",
-				"DS_BW_adapt_diff_announcements_3",
-			],
-			"value" : "adapt_diff_announcements",
-			"default_value" : 2
+			"callback" : "DS_BWcb_ADL_announcements",
+			"value" : "ADL_announcements",
+			"default_value" : true
 		},
 		{
 			"type" : "multiple_choice",

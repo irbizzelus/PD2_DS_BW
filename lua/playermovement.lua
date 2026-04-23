@@ -8,7 +8,7 @@ Hooks:PostHook(PlayerMovement, "_apply_attention_setting_modifications", "DS_BW_
 	end
 	
 	-- add attention level to player(s) with too high of a kpm
-	if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level == 3 then
+	if DS_BW._low_spawns_manager.level == 3 then
 		local highest_kpm = -1
 		local highest_kpm_id = -1
 		for i=1,4 do
@@ -21,7 +21,7 @@ Hooks:PostHook(PlayerMovement, "_apply_attention_setting_modifications", "DS_BW_
 			local new_mul = 5
 			setting.weight_mul = (setting.weight_mul or 1) * new_mul
 		end
-	elseif DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 4 then
+	elseif DS_BW._low_spawns_manager.level >= 4 then
 		local highest_kpm = -1
 		local highest_kpm_id = -1
 		local second_highest_kpm = -1

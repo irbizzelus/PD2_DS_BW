@@ -722,7 +722,7 @@ if not DS_BW.HotspotLogic then
 						-- avoid snipers from ditching their sniper spots (ngl if was pretty funny tho), and some other units from attacking hotspots
 						if enemy_chartweak.access and enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and enemy_chartweak.tags and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
 							-- make sure cop doesnt belong to another hotspot already
-							if enemies_to_assign > 0 and not self.HotSpotAssignedUnits[tostring(enemy:id())] and enemy:brain():is_available_for_assignment(objective) then
+							if enemies_to_assign > 0 and not self.HotSpotAssignedUnits[tostring(enemy:id())] and enemy:brain():is_available_for_assignment(objective) and not enemy:anim_data().act then
 								enemies_to_assign = enemies_to_assign - 1
 								-- default to centre of the hotspot
 								local pos_to_defend = hotspot._location

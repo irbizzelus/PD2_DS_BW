@@ -46,7 +46,7 @@ Hooks:PostHook(HuskPlayerMovement, "_apply_attention_setting_modifications", "DS
 	end
 	
 	-- add attention level to player(s) with too high of a kpm
-	if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level == 3 then
+	if DS_BW._low_spawns_manager.level == 3 then
 		local highest_kpm = -1
 		local highest_kpm_id = -1
 		for i=1,4 do
@@ -59,7 +59,7 @@ Hooks:PostHook(HuskPlayerMovement, "_apply_attention_setting_modifications", "DS
 			local new_mul = 5
 			setting.weight_mul = (setting.weight_mul or 1) * new_mul
 		end
-	elseif DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 4 then
+	elseif DS_BW._low_spawns_manager.level >= 4 then
 		local highest_kpm = -1
 		local highest_kpm_id = -1
 		local second_highest_kpm = -1
@@ -95,7 +95,7 @@ Hooks:PostHook(HuskPlayerMovement, "set_need_revive", "DSBW_on_husk_downed", fun
 	if need_revive and self._unit and alive(self._unit) then
 		local peer_id = managers.network:session():peer_by_unit(self._unit):id()
 		if peer_id and DS_BW.kpm_tracker.kills[peer_id] then
-			DS_BW.kpm_tracker.kills[peer_id] = (DS_BW.kpm_tracker.kills[peer_id] or 0) - 5
+			DS_BW.kpm_tracker.kills[peer_id] = (DS_BW.kpm_tracker.kills[peer_id] or 0) - 10
 		end
 	end
 end)

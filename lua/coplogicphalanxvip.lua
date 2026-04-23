@@ -1,3 +1,4 @@
+-- failsafe
 Hooks:PostHook(CopLogicPhalanxVip, "_chk_should_breakup", "DS_BW_PhalanxVip_chk_should_breakup_post", function(self)
 	local flee_health_ratio = tweak_data.group_ai.phalanx.vip.health_ratio_flee
 	local vip_health_ratio = self.unit:character_damage():health_ratio()

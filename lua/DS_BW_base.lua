@@ -4,13 +4,13 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.4" -- this one is used for the welcoming message mainly
-	DS_BW.version_num = 1.4 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
+	DS_BW.version = "1.5" -- this one is used for the welcoming message mainly. if you update DSBW's code to your liking, please update this value to something like "HOMEBREW" :)
+	DS_BW.version_num = 1.5 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
 	DS_BW.settings = {
 		-- gameplay
 		always_hard_heists = false,
 		starting_adapt_diff = 1,
-		adapt_diff_announcements = 2,
+		ADL_announcements = true,
 		tasks_per_min_mul = 1,
 		-- info msg
 		skills_showcase = 2,
@@ -28,7 +28,6 @@ if not DS_BW then
 	DS_BW.Assault_info = {
 		phase = "breachingbreeches",
 		number = -1,
-		latest_starting_time = 0,
 		is_infinite = false
     }
 	DS_BW.Miniboss_info = {
@@ -50,13 +49,30 @@ if not DS_BW then
 			requested_mods_2 = false,
 		}
 	end
-	DS_BW.kpm_tracker = {update_after = -999, kills = {0,0,0,0}, kpm = {0,0,0,0}, penalties = {{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0},{is_perma = false, amount = 0, was_notified_of = 0}}}
-	DS_BW.kpm_tracker.thresholds = {
-		[1] = 10,
-		[2] = 15,
-		[3] = 20,
-		[4] = 40,
-		[5] = 60,
+	DS_BW._low_spawns_manager = {
+		level = 0,
+		detected_low = false,
+		detected_high = false,
+		adjustment_cooldown = -999
+	}
+	DS_BW.kpm_tracker = {
+		update_cooldown = -1,
+		update_after = -999,
+		kills = {0,0,0,0},
+		kpm = {0,0,0,0},
+		penalties = {
+			{is_perma = false, amount = 0, was_notified_of = 0},
+			{is_perma = false, amount = 0, was_notified_of = 0},
+			{is_perma = false, amount = 0, was_notified_of = 0},
+			{is_perma = false, amount = 0, was_notified_of = 0}
+		},
+		thresholds = {
+			[1] = 14,
+			[2] = 22,
+			[3] = 30,
+			[4] = 45,
+			[5] = 60,
+		}
 	}
 	DS_BW.color = Color(255,240,140,35) / 255
 	DS_BW.end_stats_printed = false
@@ -115,27 +131,7 @@ if not DS_BW then
 		end
 	end
 	
-	function DS_BW.announce_adapt_diff()
-		if DS_BW._low_spawns_manager and DS_BW.settings.adapt_diff_announcements > 1 then
-			local lvl_str = tostring(DS_BW._low_spawns_manager.level) or "0"
-			if DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Miniboss_info.is_alive then
-				lvl_str = lvl_str.."+(4)"
-			elseif DS_BW._dsbw_new_winter_penalty_applied_ang_going or DS_BW.Miniboss_info.is_alive then
-				lvl_str = lvl_str.."+(2)"
-			end
-			local msg = "Adaptive difficulty level: "..lvl_str
-			if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then
-				if DS_BW.settings.adapt_diff_announcements == 3 then
-					DS_BW.CM:public_chat_message("[DS_BW] "..msg)
-				elseif DS_BW.settings.adapt_diff_announcements == 2 then
-					DS_BW.CM:private_chat_message(1, msg)
-					LuaNetworking:SendToPeersExcept(1, "DS_BW_sync", "ADU_"..tostring(lvl_str))
-				end
-			end
-		end
-	end
-	
-	function DS_BW.is_hard_heist()
+	function DS_BW:is_hard_heist()
 		-- most heists will follow a rule where first assault is easier then 2nd and onward.
 		-- sometimes however, it makes no logicas sense to have 'recon' easy assaults at the begining because a heist could be a set up (like alaska)
 		-- in such cases we skip first assault. also aplies to heists that are in general slower paced at the start (like harvest and trustee branchbank)
@@ -189,8 +185,168 @@ if not DS_BW then
 		end
 	end
 	
+	-- returns 2 vars, first is the new position, and the second is reporting if the map has cpt in vanilla or not
+	function DS_BW:_new_captain_winters_position()
+		-- new location for cpt.winters for maps that by default spawn cap
+		local new_vanilla_phalanx_positions = {
+			alex_1 = { -- Hector: Rats 1
+				Vector3(421, -1194, 869),
+			},
+			rat = { -- Bain: Cook off
+				Vector3(421, -1194, 869),
+			},
+			wwh = { -- Locke: alaska
+				Vector3(6010, -1125, 1352),
+				Vector3(5055, 5660, 1223),
+			},
+			big = { -- Dentist: big bank
+				Vector3(1155, 2031, 227),
+			},
+			pal = { -- Classics: counterfeit
+				Vector3(-101, 10.8, 23),
+				Vector3(-6017, 5072, 41),
+			},
+			mus = { -- Dentist: diamond
+				Vector3(-4729, -944, -994),
+				Vector3(-4415, 2693.5, -940.5),
+			},
+			mia_1 = { -- Dentist: hotline miami day 1
+				Vector3(-3389.5, -3234, 2),
+			},
+			branchbank = { -- Bain: bank (all of em)
+				Vector3(-7207.5, -3980.5, -7),
+			},
+			family = { -- Bain: diamond store
+				Vector3(-622, 3783, -17.5),
+				Vector3(-2929, -3753, -18),
+			},
+			election_day_1 = { -- Elephant
+				Vector3(4853.3, -3006.8, 2),
+				Vector3(5466.6, 2822.9, 102),
+				Vector3(60.4, -1827.9, 2),
+			},
+			welcome_to_the_jungle_1 = { -- Elephant: big oil 1
+				Vector3(46629.5, -7538.8, -20),
+				Vector3(7210.8, -2220, -20),
+			},
+			welcome_to_the_jungle_2 = { -- Elephant: big oil 2
+				Vector3(-5226.5, -2667.5, -3),
+				Vector3(-5560.5, 5066.8, 68),
+			},
+		}
+		-- positions for cap for maps that normally don't spawn him
+		local new_phalanx_positions = {
+			roberts = { -- go bank
+				Vector3(2184, -4525, -64),
+			},
+			red2 = { -- FWB
+				Vector3(-4271, -2011, -123),
+			},
+			glace = { -- Green bridge
+				Vector3(-1323, -17519, 5804),
+			},
+			nmh = { -- No Mercy
+				Vector3(2829, 427, 2),
+			},
+			brb = { -- Brooklyn bank
+				Vector3(4200, -3090, -16),
+				Vector3(-298, 418, 7),
+			},
+			dah = { -- Classics: diamonds
+				Vector3(-1095, -420, 777),
+			},
+			flat = { -- Classics: panic room
+				Vector3(-3288, -36, -22),
+			},
+			man = { -- Classics: undercover
+				Vector3(-837, -794, 1709),
+			},
+			run = { -- Classics: heat street
+				Vector3(-8293, -4926, 40),
+			},
+			mia_2 = { -- Dentist: hotline miami day 2
+				Vector3(140, -101, -5),
+			},
+			rvd1 = { -- Bain: Reserviour dogs day 1 (canonical 2nd)
+				Vector3(-9, 3168.5, 2),
+			},
+			rvd2 = { -- Bain: Reserviour dogs day 2 (canonical 1st)
+				Vector3(963, 4925.5, -18),
+			},
+			trai = { -- McShay: Train
+				Vector3(3145, -126, -9),
+			},
+			watchdogs_2 = { -- Hector
+				Vector3(-2503.5, 168.8, 2),
+			},
+			watchdogs_2_day = { -- Hector
+				Vector3(-2503.5, 168.8, 2),
+			},
+			sah = { -- Locke: auction
+				Vector3(1459.2, -2260.6, -95),
+				Vector3(-2318.9, -608.6, -143),
+			},
+			born = { -- Dentist: biker heist 1
+				Vector3(1248.5, 2589.5, 2),
+			},
+			arm_for = { -- Bain: transport: train
+				Vector3(-3961.7, -7422.1, -887),
+			},
+			friend = { -- Butcher: sosa
+				Vector3(8245.2, -3133.6, -775),
+				Vector3(3600.8, 5207.5, -147),
+			},
+			crojob3 = { -- Butcher: forest
+				Vector3(6426.1, -11229.2, 1419),
+				Vector3(1452.7, 6982, 5243),
+			},
+			kenaz = { -- Dentist: grin casino
+				Vector3(1554, -10124, -395),
+				Vector3(-4285.5, -4785.3, -98),
+			},
+			chca = { -- Vlad: Black cat
+				Vector3(-9310, 16997.3, 102),
+			},
+			four_stores = { -- Vlad
+				Vector3(2772.1, -1541.4, 27),
+			},
+			mallcrasher = { -- Vlad
+				Vector3(2594, 1746.8, -413),
+			},
+			nightclub = { -- Vlad
+				Vector3(-1340.1, -3204.5, 7),
+			},
+		}
+		
+		if Global and Global.level_data and new_vanilla_phalanx_positions[Global.level_data.level_id] then
+			return new_vanilla_phalanx_positions[Global.level_data.level_id][math.random(1,#new_vanilla_phalanx_positions[Global.level_data.level_id])], true
+		elseif Global and Global.level_data and new_phalanx_positions[Global.level_data.level_id] then
+			return new_phalanx_positions[Global.level_data.level_id][math.random(1,#new_phalanx_positions[Global.level_data.level_id])], false
+		else
+			return nil, nil
+		end
+	end
+
+	-- check for whatever preventions maps with custom winters spawns may have. currently only limits by wave number
+	function DS_BW:_new_captain_winters_spawn_should_be_prevented()
+		-- min wave number at which he can spawn
+		local min_assault_number = {
+			run = 2,
+			mia_2 = 2,
+			des = 2,
+		}
+		
+		if Global and Global.level_data and min_assault_number[Global.level_data.level_id] then
+			return min_assault_number[Global.level_data.level_id] > DS_BW.Assault_info.number
+		else
+			return false
+		end
+	end
+	
 	dofile(ModPath .. "lua/coputils_cuffing.lua")
 	dofile(ModPath .. "lua/coputils_hotspots.lua")
+	dofile(ModPath .. "lua/AD_updater.lua")
+	dofile(ModPath .. "lua/Anti_spawncamp.lua")
 
 	-- Change the surrender presets to harder ones
 	function DS_BW:update_surrender_tweak_data()
@@ -228,12 +384,12 @@ if not DS_BW then
 			}
 			-- Normal preset, used for light swats
 			local surrender_preset_normal = {
-				base_chance = 0.25,
+				base_chance = 0.15,
 				significant_chance = 0,
 				reasons = {
 					health = {
-						[1] = 0,
-						[0.33] = 0.25
+						[0.33] = 0.15,
+						[0] = 0.15
 					},
 					weapon_down = 0,
 					pants_down = 0
@@ -251,12 +407,12 @@ if not DS_BW then
 			}
 			-- Hardest preset, used for heavy swats
 			local surrender_preset_hard = {
-				base_chance = 0.15,
+				base_chance = 0.1,
 				significant_chance = 0,
 				reasons = {
 					health = {
-						[1] = 0,
-						[0.33] = 0.15
+						[0.33] = 0.1,
+						[0] = 0.1,
 					},
 					weapon_down = 0,
 					pants_down = 0
@@ -314,7 +470,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = tostring(DS_BW.version).." Changelog:\n\n- Updated enemy weapon usage to reduce overall damage outputs\n- Reduced enemy respawn rates and presence to compensate faster enemy reaction speeds and weapon usage\n- Reduced bulldozer spawn chances by roughly 12%\n- Made improvements to the anti-spawn-camp system\n\nMost changes are targeted at making lower adaptive difficulty levels and solo play easier, while maintaining potential chaos of higher levels."
+				local message = tostring(DS_BW.version).." Changelog:\n\n- Increased enemy respawn rates, but reduced amount of enemies spawned per squad, to allow enemies to spread out across the map better.\n- Updated enemy weapon usage to reduce individual damage from common enemies.\n- Various updates to the ADL system.\n- Sped up first assault waves, especially at ADL level 0.\n- Enemies in the middle of busy animations will no longer interrupt their animations to try to handcuff the player, or to come to a hotspot.\n- Enemy intimidations were fixed and made slightly easier.\n\nAnd even more stuff is in the changelog."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
@@ -326,13 +482,8 @@ if not DS_BW then
 	function DS_BW:welcomemsg1(peer_id) -- welcome message for clients
 		if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "Hello_"..tostring(DS_BW.version))
-			if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 1 and DS_BW.settings.adapt_diff_announcements > 1 then
+			if DS_BW._low_spawns_manager.level >= 1 and DS_BW.settings.ADL_announcements then
 				local lvl_str = tostring(DS_BW._low_spawns_manager.level) or "0"
-				if DS_BW._dsbw_new_winter_penalty_applied_ang_going and DS_BW.Miniboss_info.is_alive then
-					lvl_str = lvl_str.."+(4)"
-				elseif DS_BW._dsbw_new_winter_penalty_applied_ang_going or DS_BW.Miniboss_info.is_alive then
-					lvl_str = lvl_str.."+(2)"
-				end
 				LuaNetworking:SendToPeer(peer_id, "DS_BW_sync", "ADU_"..tostring(lvl_str))
 			end
 			DelayedCalls:Add("DS_BW:welcomemsg1topeer_" .. tostring(peer_id), 1.2, function()
@@ -347,11 +498,11 @@ if not DS_BW then
 					if not peer then
 						return
 					end
-					local message = "Welcome "..peer:name().."! This lobby runs \"Death Sentence, but Worse\" mod (Ver. "..DS_BW.version..") which adjusts loud gameplay in a few ways:"
+					local message = "Welcome "..peer:name().."! This lobby runs \"Death Sentence, but Worse\" mod (version "..DS_BW.version..") which changes loud DS gameplay in a few ways."
 					if managers.network:session() and managers.network:session():peers() then
 						DS_BW.players[peer_id].welcome_msg1_shown = true
 						if not DS_BW.peers_with_mod[peer_id] then
-							peer:send("request_player_name_reply", "DS_BW")
+							peer:send("request_player_name_reply", managers.network.account:username())
 							peer:send("send_chat_message", ChatManager.GAME, message)
 						end
 					end
@@ -377,11 +528,11 @@ if not DS_BW then
 					if managers.network:session() and managers.network:session():peers() then
 						DS_BW.players[peer_id].welcome_msg2_shown = true
 						if not DS_BW.peers_with_mod[peer_id] then
-							peer:send("send_chat_message", ChatManager.GAME, "\n- Enemies have resistance to the ECM STUN effect: /ecm\n- It's MUCH harder to make enemies surrender: /dom\n- Enemies can now HANDCUFF you during interactions: /cuffs\n- Enemy variety, behavior, and used weapons were altered: /cops and /weapons")
-							peer:send("send_chat_message", ChatManager.GAME, "\n- After detonation flashbangs can now EXPLODE, or create a fire field, damaging players: /flash\n- Assault pacing was altered: /assault\n- Swat turrets will no longer self-repair :)")
-							peer:send("send_chat_message", ChatManager.GAME, "Chat commands will provide private messages with additional information on mentioned changes. Bring your BEST build and good luck.")
+							peer:send("send_chat_message", ChatManager.GAME, "Enemy updates:\n- ECM stun reduced: /ecm\n- Added spawn protection: /spawncamp\n- Intimidations are harder: /dom\n- Gained ability to handcuff players during interactions: /cuffs\n- Updated variety (/cops), behavior (/ai) and damage outputs (/weapons).")
+							peer:send("send_chat_message", ChatManager.GAME, "Other updates:\n- Enemy pressure is adapting to team performance: /adl\n- Flashbangs can create explosions and fire fields: /flash\n- Assault pacing was altered: /assault\n- Swat turrets no longer self-repair :)")
+							peer:send("send_chat_message", ChatManager.GAME, "Use chat commands to get a DM with additional information. Bring your favoutite build and GLHF!")
 							if DS_BW and not MenuCallbackHandler:is_modded_client() then
-								peer:send("send_chat_message", ChatManager.GAME, "Lastly, "..managers.network.account:username().." seems to have a hidden mod list, you can request their modlist using /hostmods.")
+								peer:send("send_chat_message", ChatManager.GAME, "Lastly, host ("..managers.network.account:username()..") seems to have a hidden mod list, you can request their modlist using /hostmods.")
 							end
 							peer:send("request_player_name_reply", managers.network.account:username())
 						end

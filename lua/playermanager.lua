@@ -3,6 +3,6 @@ Hooks:PreHook(PlayerManager, "set_player_state", "DSBW_on_local_player_downed", 
 		return
 	end
 	if state == "bleed_out" and DS_BW.kpm_tracker.kills[1] then
-		DS_BW.kpm_tracker.kills[1] = (DS_BW.kpm_tracker.kills[1] or 0) - 5
+		DS_BW.kpm_tracker.kills[1] = (DS_BW.kpm_tracker.kills[1] or 0) - 10
 	end
 end

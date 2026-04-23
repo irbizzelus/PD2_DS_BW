@@ -79,7 +79,7 @@ Hooks:Add("NetworkReceivedData", "DS_BW_NetworkReceivedData", function(sender, m
 		if sender == 1 and string.sub(data, 1, 6) == "Hello_" then
 			if not DS_BW._is_client_in_DSBW_lobby then
 				local host_version = string.sub(data, 7, -1)
-				local msg = "Host is running \"DS, but Worse\" mod at version \""..tostring(host_version).."\". If you want a reminder, you could use: /help; /commands; /cops; /ecm; /dmg; /weapons; /flash; /cuffs; /dom; /assault; /hostmods; /ammo; /meds; /rng. Good luck."
+				local msg = "Host is running \"DS, but Worse\" mod at version \""..tostring(host_version).."\". If you want a reminder, you could use: /help; /commands; /ecm; /spawncamp; /dom; /cuffs; /cops; /ai; /weapons; /adl; /flash; /assault; /hostmods; /ammo; /meds; /rng. Good luck."
 				DS_BW.CM:private_chat_message(managers.network:session():local_peer():id(), msg)
 				DS_BW._is_client_in_DSBW_lobby = true
 			end

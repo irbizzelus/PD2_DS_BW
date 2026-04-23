@@ -21,8 +21,8 @@ Hooks:Add('MenuManagerInitialize', 'DS_BW_init', function(menu_manager)
 	end
 	
 	-- gameplay
-	MenuCallbackHandler.DS_BWcb_adapt_diff_announcements = function(this, item)
-		DS_BW.settings.adapt_diff_announcements = tonumber(item:value())
+	MenuCallbackHandler.DS_BWcb_ADL_announcements = function(this, item)
+		DS_BW.settings[item:name()] = item:value() == 'on'
 		DS_BW:Save()
 	end
 	

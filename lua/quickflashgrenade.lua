@@ -17,7 +17,7 @@ function QuickFlashGrenade:update(unit, t, dt)
 	if self._state == 3 and self:timer() <= 0.05 and DS_BW_flashbang_roll_tracker[self._unit:id()] == "about_to_explode" and not self._destroyed then
 		DS_BW_flashbang_roll_tracker[self._unit:id()] = "exploded"
 		if math.random() <= 0.75 then -- chance to replace flashbang with new fire/explosive trap
-			if math.random() <= 0.4 then -- chance for explosive, otherwise fire
+			if math.random() <= 0.6 then -- chance for explosive, otherwise fire
 				-- explosive
 					
 				-- find a valid player to give owndership of the projectile to
@@ -50,7 +50,7 @@ function QuickFlashGrenade:update(unit, t, dt)
 					
 					-- rocket from a 1300 grenade launcher
 					local projectile_str = "launcher_frag_m32"
-					if math.random() <= 0.25 then
+					if math.random() <= 0.333333333 then
 						-- 10% chance for the scarface pack rocket
 						projectile_str = "rocket_ray_frag"
 					end

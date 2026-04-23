@@ -1,3 +1,4 @@
+-- failsafe
 Hooks:PostHook(CopLogicPhalanxMinion, "chk_should_breakup", "DS_BW_PhalanxMinion_chk_should_breakup_post", function(self)
 	local phalanx_minion_count = managers.groupai:state():get_phalanx_minion_count()
 	local min_count_minions = tweak_data.group_ai.phalanx.minions.min_count

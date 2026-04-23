@@ -1,3 +1,4 @@
+-- enemy ai speed
 local function update_EnemyManager()
 	DelayedCalls:Add("DS_BW_add_faster_enemy_ai_for_DS", 3, function()
 		if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck and tweak_data then
@@ -19,7 +20,7 @@ local function update_EnemyManager()
 				local max_tasks_this_frame = math.ceil(60 * dt)
 				
 				if not managers.groupai:state():whisper_mode() then -- stelf
-					if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level then
+					if DS_BW._low_spawns_manager.level then
 						local tasks_per_lvl = {
 							[0] = 60,
 							[1] = 80,

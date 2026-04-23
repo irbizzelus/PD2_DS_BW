@@ -9,11 +9,21 @@ end
 
 Hooks:PreHook(CopDamage, "die", "DS_BW_CopDamage_die_pre", function(self,attack_data)
 	
+	-- remove spawn camp protection highlights
+	if self._unit:contour() and self._unit:contour()._contour_list and #self._unit:contour()._contour_list >= 1  then
+		for i=1, #self._unit:contour()._contour_list do
+			if self._unit:contour()._contour_list[i] and self._unit:contour()._contour_list[i].type and self._unit:contour()._contour_list[i].type == "tmp_invulnerable" then
+				self._unit:contour():remove( "tmp_invulnerable" , true ) 
+			end
+		end
+	end
+	
 	-- clear medic's red highlight that they get during miniboss phase
 	if self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "medic") then
 		self._unit:contour():remove("mark_enemy_damage_bonus_distance", true)
 	end
 	
+	-- remove highlight from captain W's units
 	if self._unit:base():char_tweak().tags and table.contains(self._unit:base():char_tweak().tags, "DS_BW_tag_reinforced_shield") then
 		if self._unit:contour() and self._unit:contour()._contour_list and #self._unit:contour()._contour_list >= 1  then
 			for i=1, #self._unit:contour()._contour_list do
@@ -33,9 +43,6 @@ Hooks:PreHook(CopDamage, "die", "DS_BW_CopDamage_die_pre", function(self,attack_
 			if boss.kill_counter == 1 and boss.appearances <= 2 then
 				DS_BW.CM:public_chat_message("[DS_BW] 1 down, 1 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
 			end
-			-- if boss.kill_counter == 2 and boss.appearances <= 1 then
-				-- DS_BW.CM:public_chat_message("[DS_BW] 2 down, 1 to go.") -- print 'guide' message to let players know that there are 2 bosses total. only for first 2 appearances
-			-- end
 			if boss.kill_counter == 2 then
 				if boss.appearances <= 1 then
 					DS_BW.CM:public_chat_message("[DS_BW] Duo defeated and global enemy damage resistance is now gone. Well done.")
@@ -50,6 +57,7 @@ Hooks:PreHook(CopDamage, "die", "DS_BW_CopDamage_die_pre", function(self,attack_
 	
 end)
 
+-- track kills for ADL
 Hooks:PostHook(CopDamage, "_on_damage_received", "DS_BW_CopDamage_on_damage_received_post", function(self, attack_data)
 	
 	if not (Network:is_server() and DS_BW and DS_BW.DS_difficultycheck) then
@@ -132,7 +140,7 @@ Hooks:PreHook(CopDamage, "damage_bullet", "DS_BW_CopDamage_damage_bullet_pre", f
 		if attacker_unit == managers.player:player_unit() then
 			return false
 		end
-		if DS_BW._low_spawns_manager and DS_BW._low_spawns_manager.level >= 3 and DS_BW.kpm_tracker.penalties[1].amount == 0 then
+		if DS_BW._low_spawns_manager.level >= 3 and DS_BW.kpm_tracker.penalties[1].amount == 0 then
 			if DS_BW._low_spawns_manager.level == 3 then
 				return 0.8
 			else

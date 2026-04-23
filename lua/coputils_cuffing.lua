@@ -107,7 +107,7 @@ if not DS_BW.CopUtils then
 						inactive = true,
 						intimidated = true,
 					}
-					if not ignored_logics[enemy:brain()._current_logic_name] then
+					if not ignored_logics[enemy:brain()._current_logic_name] and not enemy:anim_data().act then
 						local dist = mvector3.distance(enemy:position(), playerpos)
 						local is_available = enemy:brain():is_available_for_assignment(objective)
 
@@ -249,7 +249,7 @@ if not DS_BW.CopUtils then
 										inactive = true,
 										intimidated = true,
 									}
-									if not ignored_logics[enemy:brain()._current_logic_name] then
+									if not ignored_logics[enemy:brain()._current_logic_name] and not enemy:anim_data().act then
 										local enemy_chartweak = enemy:base():char_tweak()
 										if enemy_chartweak.access ~= "gangster" then
 											if (Application:time() > DS_BW.CopUtils.allowed_cuffing_time[managers.network:session():peer_by_unit(player_unit):id()]) or is_client_in_dsbw_lobby then

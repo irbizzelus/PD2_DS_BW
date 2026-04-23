@@ -813,7 +813,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Blue_Green_Tank = {
-			amount = {1, 2},
+			amount = {3, 5},
 			spawn = {
 				{
 					unit = "Blue_green_tank",
@@ -843,7 +843,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Grey_Tank = {
-			amount = {1, 2},
+			amount = {3, 5},
 			spawn = {
 				{
 					unit = "Grey_tank",
@@ -880,7 +880,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- Squad_Heavy_1
 		self.enemy_spawn_groups.tac_swat_rifle_flank = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "RifleMen",
@@ -894,7 +894,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Heavy_2 = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "RifleMen",
@@ -908,7 +908,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Heavy_3 = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "RifleMen",
@@ -922,7 +922,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Light_1 = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "SupportCQB",
@@ -936,7 +936,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Light_2 = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "SupportCQB",
@@ -950,7 +950,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Light_3 = {
-			amount = {5, 6},
+			amount = {1, 2},
 			spawn = {
 				{
 					unit = "SupportCQB",
@@ -965,7 +965,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- Squad_Medic
 		self.enemy_spawn_groups.tac_tazer_flanking = {
-			amount = {2, 2},
+			amount = {2, 4},
 			spawn = {
 				{
 					unit = "medic_M4",
@@ -996,7 +996,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- Squad_Shield
 		self.enemy_spawn_groups.tac_shield_wall = {
-			amount = {2, 4},
+			amount = {3, 5},
 			spawn = {
 				{
 					unit = "FBI_shield",
@@ -1027,7 +1027,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- Squad_Tazer
 		self.enemy_spawn_groups.tac_tazer_charge = {
-			amount = {1, 3},
+			amount = {4, 6},
 			spawn = {
 				{
 					unit = "CS_tazer",
@@ -1058,13 +1058,13 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- Squad_Tank
 		self.enemy_spawn_groups.tac_bull_rush = {
-			amount = {1, 2},
+			amount = {2, 3},
 			spawn = {
 				{
 					unit = "FBI_tank",
 					freq = 1,
 					amount_min = 1,
-					amount_max = 2,
+					amount_max = 1,
 					tactics = self._tactics.FBI_tank,
 					rank = 1
 				},
@@ -1080,7 +1080,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 		
 		self.enemy_spawn_groups.Squad_Tank_Annoying = {
-			amount = {1, 2},
+			amount = {2, 3},
 			spawn = {
 				{
 					unit = "FBI_tank_annoying",
@@ -1103,13 +1103,13 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		
 		-- this squad is almost never used ever since they gutted the reinforce phase
 		self.enemy_spawn_groups.FBI_defence_squad = {
-			amount = {2, 4},
+			amount = {2, 3},
 			spawn = {
 				{
 					unit = "SupportCQB",
 					freq = 1,
-					amount_min = 1,
-					amount_max = 2,
+					amount_min = 2,
+					amount_max = 3,
 					tactics = self._tactics.FBI_suit,
 					rank = 1
 				}
@@ -1117,7 +1117,7 @@ Hooks:PostHook(GroupAITweakData, "_init_enemy_spawn_groups", "DS_BW_spawngroupst
 		}
 
 		self.enemy_spawn_groups.single_spooc = {
-			amount = {2, 4},
+			amount = {1, 1},
 			spawn = {
 				{
 					unit = "spooc",
@@ -1195,24 +1195,24 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			-- no mercy shorter first waves
 			self.besiege.assault.sustain_duration_min = {
-				40,
-				40,
+				60,
+				60,
 				300
 			}
 			self.besiege.assault.sustain_duration_max = {
-				50,
-				50,
+				75,
+				75,
 				310
 			}
 		else
 			self.besiege.assault.sustain_duration_min = {
-				60,
-				60,
+				90,
+				90,
 				270
 			}
 			self.besiege.assault.sustain_duration_max = {
-				70,
-				70,
+				105,
+				105,
 				280
 			}
 		end
@@ -1616,7 +1616,8 @@ function GroupAITweakData:init_taskdata_spawnRates()
 	}
 	
 	DS_BW.base_groupaitweak_values = {
-		assault_force = deep_clone(self.besiege.assault.force)
+		assault_force = deep_clone(self.besiege.assault.force),
+		assault_groups = deep_clone(self.besiege.assault.groups)
 	}
 	if self.special_unit_spawn_limits then
 		DS_BW.base_groupaitweak_values.special_limits = deep_clone(self.special_unit_spawn_limits)

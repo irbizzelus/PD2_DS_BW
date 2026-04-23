@@ -3,11 +3,8 @@
 	"DS_BW_blank": "",
 	
 	"DS_BW_gameplay_header": "---- GAMEPLAY SETTINGS ----",
-	"DS_BW_adapt_diff_announcements": "Adapt. Diff. Messages",
-	"DS_BW_adapt_diff_announcements_desc": "Whenever adaptive difficulty level is updated, a chat message can notify of this change. It can notify either you and other players who also have DSBW installed, or everybody in the lobby.",
-	"DS_BW_adapt_diff_announcements_1": "Disabled",
-	"DS_BW_adapt_diff_announcements_2": "DSBW Players",
-	"DS_BW_adapt_diff_announcements_3": "Everyone",
+	"DS_BW_adapt_diff_announcements": "Adaptive Difficulty Announcements",
+	"DS_BW_adapt_diff_announcements_desc": "Whenever adaptive difficulty level is updated a public chat message will announce the change. This includes info on wave length extensions.",
 	"DS_BW_starting_adapt_diff": "Lowest Adaptive Diff",
 	"DS_BW_starting_adapt_diff_desc": "Adaptive difficulty will always be set to this value at the start of an assault, and will never be allowed to go below it.",
 	"DS_BW_starting_adapt_diff_1": "0",
