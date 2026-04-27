@@ -1184,8 +1184,8 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 	if difficulty_index == 8 then
 		
 		self.smoke_and_flash_grenade_timeout = {
-			6,
-			12
+			4,
+			8
 		}
 		self.flash_grenade.timer = 1
 		
@@ -1309,14 +1309,14 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.force_pool = {
 				40,
-				250,
-				250
+				275,
+				275
 			}
 		else
 			self.besiege.assault.force_pool = {
 				40,
-				160,
-				160
+				175,
+				175
 			}
 		end
 		

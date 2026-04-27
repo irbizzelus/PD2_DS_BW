@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.5" -- this one is used for the welcoming message mainly. if you update DSBW's code to your liking, please update this value to something like "HOMEBREW" :)
-	DS_BW.version_num = 1.5 -- this one is used for comparing to the current save file. only updated if the pop up message needs to include important patch info
+	DS_BW.version = "1.5.01" -- this one is used for the welcoming message mainly. if you update DSBW's code to your liking, please update this value to something like "HOMEBREW" :)
+	DS_BW.version_num = 1.5 -- this one is used for comparing to the current save file. only update if the pop up changelog message with important patch info needs to appear
 	DS_BW.settings = {
 		-- gameplay
 		always_hard_heists = false,

@@ -205,13 +205,13 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 		"You have unlocked existential dread!",
 		"Water might not be wet. This is because most scientists define wetness as a liquid’s ability to maintain contact with a solid surface, meaning that water itself is not wet, but can make other objects wet.",
 		"Our solar system has a wall. The heliopause – the region of space in which solar wind isn’t hot enough to push back the wind of particles coming from distant stars – is often considered the \"boundary wall\" of the Solar System and interstellar space.",
-		"The largest piece of fossilised dinosaur poo discovered is over 30cm long and over two litres in volume. Believed to be a Tyrannosaurus rex's turd, the fossilised dung (also named a \"coprolite\") is helping scientists better understand what the dinosaur ate.",
-		"Chainsaw was developed in Scotland in the late 18th Century to help aid and speed up the process of symphysiotomy (widening the pubic cartilage) and removal of disease-laden bone during childbirth. It wasn’t until the start of the 20th Century that we started using chainsaws for woodchopping.",
+		"The largest piece of fossilised dinosaur poo discovered is over 30cm long and over 2L in volume. Believed to be a Tyrannosaurus rex's turd, the fossilised dung (also named a \"coprolite\") is helping scientists better understand what dinosaurs ate.",
+		"Chainsaw was developed to help aid and speed up the process of symphysiotomy (widening the pubic cartilage) and removal of disease-laden bone during childbirth. Only 2 centuries after it's invention have we started using chainsaws for woodchopping.",
 		"LEGO bricks withstand compression better than concrete. An ordinary plastic LEGO brick is able to support the weight of 375,000 other bricks before it fails. This, theoretically, would let you build a tower nearing 3.5km in height.",
 		"Some animals display autistic-like traits. Autistic traits in animals include a tendency toward repetitive behaviour and atypical social habits.",
 		"The biggest butterfly in the world has a 31cm wingspan. It belongs to the Queen Alexandra's Birdwing butterfly, which you can find in the forests of the Oro Province, in the east of Papua New Guinea.",
 		"Flamingoes aren’t born pink. They actually come into the world with grey/white feathers and only develop a pinkish hue after starting a diet of brine shrimp and blue-green algae.",
-		"Giraffes hum to communicate with each other. It’s thought that the low-frequency humming could be a form of ‘contact call’ between individuals who have been separated from their herd, helping them to find each other in the dark. Some researchers think they sleep talk too.",
+		"Giraffes hum to communicate - it is thought that the low-frequency humming could be a form of \"contact call\" between individuals who have been separated from their herd, helping them to find each other in the dark. Some think they sleep talk too.",
 		"The fastest jet is NASA’s X-43 experimental plane - it can fly almost 10 times the speed of sound (11,854km/h). The design meant that they had to be dropped from a Boeing B-52 in order to fly.",
 		"Chuck Norris once killed 20 men with a single grenade throw. He still keeps the grenade on his nightstand as a souvenir.",
 		"Chuck Norris' bank PIN is actually known. It's the last four digits of pi.",
@@ -273,6 +273,32 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 		"Shout out to my fingers. I can count on all of them.",
 		"What country's capital is growing the fastest? Ireland. Every day it's Dublin.",
 		"I used to hate facial hair...but then it grew on me.",
+		"Why don’t scientists trust atoms? Because they make up everything.",
+		"I poured root beer into a square glass. Now I have beer.",
+		"Why did the bicycle fall over? Because it was two-tired.",
+		"I’m reading a book on anti-gravity. It’s impossible to put down.",
+		"My therapist says I have a preoccupation with vengeance. We’ll see about that.",
+		"What do you call a fish wearing a bowtie? So-fish-ticated.",
+		"Why don’t skeletons fight each other? They don’t have the guts.",
+		"What do you call a belt made of watches? A waist of time.",
+		"Why did the scarecrow win an award? Because he was outstanding in his field.",
+		"Parallel lines have so much in common. It’s a shame they’ll never meet.",
+		"I tried to catch fog yesterday. Mist.",
+		"Why did the golfer bring two pairs of pants? In case he got a hole in one.",
+		"A hippo's sweat is red and acts as a natural sunscreen. So they're basically greasy, pink, murderous beachgoers.",
+		"Why did the coffee file a police report? It got mugged.",
+		"I don't play stupid. I play a specific kind of stupid that only comes out around instructions.",
+		"What's orange and sounds like a parrot? A carrot.",
+		"Why don't programmers like nature? It has too many bugs.", -- fucking horrible
+		"I asked the librarian if they had any books on paranoia. She whispered, \"They're right behind you.\"",
+		"What do you call a sleeping dinosaur? A dino-snore.",
+		"I finally got around to reading the dictionary. The plot was hard to follow but the characters were great.",
+		"Octopuses have three hearts. Two pump blood to the gills, while the third stops beating when they swim. They literally swim themselves to cardiac arrest.",
+		"Humans glow in the dark. Our bodies emit visible light, but it's 1,000 times weaker than what our eyes can perceive.",
+		"The average person will walk past 36 murderers in their lifetime, and statistically you've already done it.",
+		"Honey never spoils. Archaeologists found 3,000-year-old honey in Egyptian tombs that was still perfectly edible.",
+		"The dot over a lowercase 'i' or 'j' is called a tittle. You now know more than 99% of people at parties.",
+		"\ni am the lorax\nand i speak for the heisters\nfor some very reasonable reasons\nthe game has no players",
 		-- benevolent
 		"Ask your parents where babies come from.",
 		"Piss tastes slighly sour and a litte lemony (trust me I know)",
@@ -470,8 +496,12 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			}
 			for i=1, #messages do
 				DelayedCalls:Add("DS_BW_rng_chat_"..tostring(i), messages[i].delay, function()
-					local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-					if hud and hud.panel:child("chat_panel") then
+					if Utils:IsInGameState() then
+						local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+						if hud and hud.panel:child("chat_panel") then
+							DS_BW.CM:public_chat_message(messages[i].msg)
+						end
+					else
 						DS_BW.CM:public_chat_message(messages[i].msg)
 					end
 				end)
@@ -533,15 +563,23 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			
 			for i=1, #messages do
 				DelayedCalls:Add("DS_BW_rng_chat_"..tostring(i), messages[i].delay, function()
-					local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-					if hud and hud.panel:child("chat_panel") then
+					if Utils:IsInGameState() then
+						local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+						if hud and hud.panel:child("chat_panel") then
+							DS_BW.CM:public_chat_message(messages[i].msg)
+						end
+					else
 						DS_BW.CM:public_chat_message(messages[i].msg)
 					end
 				end)
 			end
 			DelayedCalls:Add("DS_BW_rng_chat_7", 36, function()
-				local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-				if hud and hud.panel:child("chat_panel") then
+				if Utils:IsInGameState() then
+					local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+					if hud and hud.panel:child("chat_panel") then
+						DS_BW.CM:public_chat_message("I LOVE YOU.")
+					end
+				else
 					DS_BW.CM:public_chat_message("I LOVE YOU.")
 				end
 				DS_BW.CM.temp_rng_prevention = false
@@ -595,15 +633,23 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			
 			for i=1, #messages do
 				DelayedCalls:Add("DS_BW_rng_chat_"..tostring(i), messages[i].delay, function()
-					local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-					if hud and hud.panel:child("chat_panel") then
+					if Utils:IsInGameState() then
+						local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+						if hud and hud.panel:child("chat_panel") then
+							DS_BW.CM:public_chat_message(messages[i].msg)
+						end
+					else
 						DS_BW.CM:public_chat_message(messages[i].msg)
 					end
 				end)
 			end
 			DelayedCalls:Add("DS_BW_rng_chat_4", 4, function()
-				local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-				if hud and hud.panel:child("chat_panel") then
+				if Utils:IsInGameState() then
+					local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+					if hud and hud.panel:child("chat_panel") then
+						DS_BW.CM:public_chat_message("\n- No, it doesn't.")
+					end
+				else
 					DS_BW.CM:public_chat_message("\n- No, it doesn't.")
 				end
 				DS_BW.CM.temp_rng_prevention = false
@@ -711,8 +757,12 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			
 			for i=1, #messages do
 				DelayedCalls:Add("DS_BW_rng_chat_"..tostring(i), messages[i].delay, function()
-					local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
-					if hud and hud.panel:child("chat_panel") then
+					if Utils:IsInGameState() then
+						local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+						if hud and hud.panel:child("chat_panel") then
+							DS_BW.CM:public_chat_message(messages[i].msg)
+						end
+					else
 						DS_BW.CM:public_chat_message(messages[i].msg)
 					end
 				end)
@@ -720,7 +770,15 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			DelayedCalls:Add("DS_BW_rng_chat_"..tostring(counter + 1), 215, function()
 				local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
 				if hud and hud.panel:child("chat_panel") then
-					DS_BW.CM:public_chat_message("Welcome to the Internet - Bo Burnham (from album \"Inside\")") 
+					DS_BW.CM:public_chat_message() 
+				end
+				if Utils:IsInGameState() then
+					local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+					if hud and hud.panel:child("chat_panel") then
+						DS_BW.CM:public_chat_message("Welcome to the Internet - Bo Burnham (from album \"Inside\")")
+					end
+				else
+					DS_BW.CM:public_chat_message("Welcome to the Internet - Bo Burnham (from album \"Inside\")")
 				end
 				DS_BW.CM.temp_rng_prevention = false
 				DS_BW.CM.rng_contolled_by_special_case = nil
@@ -730,6 +788,156 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 			DS_BW.CM:public_chat_message("Hi, Billy Mays here for the fIRsT aId KIt - the fast and easy way tO gET ThE fUcK uP and in just two minutes, you'll have 5 miLliON doLLars! Use MUScle, GRInDeR - any build! You can double or tripple stack them and watch your tEaM attack them!")
 			DS_BW.CM:public_chat_message("I know what you are thinking: what about deAtH wISh? Watch this: *proceeds to nuke the map in god mode* ... pAydAy 2 just got easier! ")
 			DS_BW.CM:public_chat_message("But i'm not done yet! we'LL send you the gAGe AsS PAck for free! Order right now!")
+		end,
+		[8] = function(sender)
+			DS_BW.CM.rng_contolled_by_special_case = 8
+			if DS_BW.CM.temp_rng_prevention then
+				DS_BW.CM:private_chat_message(sender:id(), "RNG command is temporarily disabled.")
+				return
+			end
+			if not DS_BW.CM.temp_rng_prevention then
+				DS_BW.CM.temp_rng_prevention = true
+			end
+			
+			local messages = {
+				[1] = {
+					msg = "Demoman:\n- Spy. What is this drawing?",
+					delay = 0
+				},
+				[2] = {
+					msg = "Spy: \n- Ohhhhaaa, that? Thats not mine!",
+					delay = 3
+				},
+				[3] = {
+					msg = "\n- It was it your locker.",
+					delay = 6
+				},
+				[4] = {
+					msg = "\n- I didn't draw it.",
+					delay = 8
+				},
+				[5] = {
+					msg = "\n- Spy.",
+					delay = 10
+				},
+				[6] = {
+					msg = "\n- Someone put it there!",
+					delay = 11
+				},
+				[7] = {
+					msg = "\n- No, listen..",
+					delay = 12
+				},
+				[8] = {
+					msg = "\n- I DON'T DRAW STUFF LIKE THAT!",
+					delay = 14
+				},
+				[9] = {
+					msg = "\n- YOU DREW IT YOU BLOODY LIAR. You signed it.",
+					delay = 16
+				},
+				[10] = {
+					msg = "\n- Owwhhhh. Did i sign it?",
+					delay = 19
+				},
+				[11] = {
+					msg = "\n- Spy. Why did you draw yourself as a buff two-legged wolf person?",
+					delay = 22
+				},
+				[12] = {
+					msg = "\n- That's my fursona.",
+					delay = 26
+				},
+				[13] = {
+					msg = "\n- ... YOUR FUCKING WHAT?",
+					delay = 28
+				},
+				[14] = {
+					msg = "\n- HIS NAME IS DUTCH! HE IS MY FURSONA!",
+					delay = 30
+				},
+				[15] = {
+					msg = "\n- WHAT THE FUCK is a fursona?...",
+					delay = 32
+				},
+				[16] = {
+					msg = "\n- I role-play as a soft shy wolf-boy on twitter.",
+					delay = 34
+				},
+				[17] = {
+					msg = "\n- You act like a dog on the internet?",
+					delay = 37
+				},
+				[18] = {
+					msg = "\n- Dutch is a wolf, but yes. Whatever. I just like to be cute.",
+					delay = 40
+				},
+				[19] = {
+					msg = "\n- CUTE?!",
+					delay = 43
+				},
+				[20] = {
+					msg = "\n- Yes.",
+					delay = 44
+				},
+				[21] = {
+					msg = "\n- YOU JUST LIKE TO BE CUTE?",
+					delay = 45
+				},
+				[22] = {
+					msg = "\n- Yes!",
+					delay = 46
+				},
+				[23] = {
+					msg = "\n- Do you think i don't notice the fat fucking bulge in his pants?",
+					delay = 47
+				},
+				[24] = {
+					msg = "\n- uWu",
+					delay = 50
+				},
+				[25] = {
+					msg = "\n- WHAT?",
+					delay = 51
+				},
+				[26] = {
+					msg = "\n- what?",
+					delay = 52
+				},
+				[27] = {
+					msg = "\n- WHAT THE FUCK WAS THAT?",
+					delay = 53
+				},
+				[28] = {
+					msg = "\n- nothing",
+					delay = 53.5
+				},
+				[29] = {
+					msg = "\n- WHAT DID YOU SAY?",
+					delay = 54
+				},
+				[30] = {
+					msg = "\n- i didn't say anyth..",
+					delay = 54.5
+				},
+			}
+			
+			for i=1, #messages do
+				DelayedCalls:Add("DS_BW_rng_chat_"..tostring(i), messages[i].delay, function()
+					if Utils:IsInGameState() then
+						local hud = managers.hud and managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+						if hud and hud.panel:child("chat_panel") then
+							DS_BW.CM:public_chat_message(messages[i].msg)
+						end
+					else
+						DS_BW.CM:public_chat_message(messages[i].msg)
+					end
+				end)
+			end
+			DelayedCalls:Add("DS_BW_rng_chat_31", 55, function()
+				DS_BW.CM.temp_rng_prevention = false
+				DS_BW.CM.rng_contolled_by_special_case = nil
+			end)
 		end,
 	}
 	DS_BW.CM:add_command("rng", {
@@ -751,7 +959,33 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 				end
 				
 				local am_angry = Utils:IsInGameState() and math.random() <= 0.1
-				if am_angry then
+				local am_very_angry = Utils:IsInGameState() and not managers.groupai:state():whisper_mode() and math.random() <= 0.01337
+				if am_very_angry then
+					local peer = managers.network and managers.network:session() and managers.network:session():peer(sender:id())
+					local unit = peer and peer:unit() or nil
+					if (unit and alive(unit)) and unit:position() then
+						DS_BW.CM:public_chat_message("[/rng] Hope you know how to run, "..sender:name()..", cause otherwise they would have to glue you back together. IN HELL!")
+						for i=1,3 do
+							DelayedCalls:Add("DS_BW_rng_chat_nuke_"..tostring(i), i + 1, function()
+								if (unit and alive(unit)) and unit:position() then
+									local peer_id = managers.network:session():peer(sender:id()):id()
+									if peer_id then
+										local nade = ProjectileBase.throw_projectile("rocket_ray_frag", unit:position() + Vector3(0, 0, 1), Vector3(0, 0, -1), peer_id)
+										DS_BW._creating_explosive_flashbang_trap = true
+										if nade then
+											if not DS_BW.explosive_trap_ids then
+												DS_BW.explosive_trap_ids = {}
+											end
+											DS_BW.explosive_trap_ids[nade:id()] = true
+										end
+									end
+								end
+							end)
+						end
+					else
+						DS_BW.CM:public_chat_message("[/rng] No.")
+					end
+				elseif am_angry then
 					local peer = managers.network and managers.network:session() and managers.network:session():peer(sender:id())
 					local unit = peer and peer:unit() or nil
 					if (unit and alive(unit)) then

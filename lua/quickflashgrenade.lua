@@ -56,7 +56,7 @@ function QuickFlashGrenade:update(unit, t, dt)
 					end
 					
 					-- spawn nade
-					local nade = ProjectileBase.throw_projectile(projectile_str, self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, 0), owner_id)
+					local nade = ProjectileBase.throw_projectile(projectile_str, self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, -1), owner_id)
 					if nade then
 						if not DS_BW.explosive_trap_ids then
 							DS_BW.explosive_trap_ids = {}
@@ -101,7 +101,7 @@ function QuickFlashGrenade:update(unit, t, dt)
 					DS_BW._creating_fire_trap = true
 
 					-- spawn nade
-					local nade = ProjectileBase.throw_projectile("launcher_incendiary_m32", self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, 0), owner_id)
+					local nade = ProjectileBase.throw_projectile("launcher_incendiary_m32", self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, -1), owner_id)
 					if nade then
 						if not DS_BW.firetrap_ids then
 							DS_BW.firetrap_ids = {}

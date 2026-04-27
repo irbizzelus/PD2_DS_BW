@@ -450,18 +450,25 @@ Hooks:PostHook(GroupAIStateBase, "on_enemy_unregistered", "DS_BW_GroupAIStateBas
 								local spawn_point_id = spawn_point._id
 								for _, sp in ipairs(sg_data.spawn_pts) do
 									if sp.mission_element._id == spawn_point_id then
-										local point_delay = 11.5
-										if Global.level_data and Global.level_data.level_id == "nmh" then
-											point_delay = 3.5
-										end
-										if Global.level_data and Global.level_data.level_id == "flat" then
-											point_delay = 6.5
+										local point_delay = 11
+										if Global and Global.level_data and Global.level_data.level_id then
+											 local SP_lockout_duration = {
+												nmh = 3,
+												flat = 6,
+												bph = 3,
+												man = 8,
+												glace = 8,
+												mia_2 = 8,
+												chew = 5,
+												nightclub = 9,
+											 }
+											 point_delay = SP_lockout_duration[Global.level_data.level_id] or 11
 										end
 										local delay_t = self._t + point_delay
 										if delay_t > sg_data.delay_t and not sg_data.DSBW_temp_disabled then -- if SP is already blocked, dont block it again, cuz otherwise players would be able to manipulate delays for up to 20ish seconds if timed well enough. prob wouldnt be that broken in general, but some map's spawn points are just fucked beyond reason
 											sg_data.delay_t = delay_t
 											sg_data.DSBW_temp_disabled = true
-											DelayedCalls:Add("DS_BW_reenable_sp_"..tostring(sg_data), point_delay + 0.5, function()
+											DelayedCalls:Add("DS_BW_reenable_sp_"..tostring(sg_data), point_delay + 1, function()
 												if sg_data and sg_data.DSBW_temp_disabled then
 													sg_data.DSBW_temp_disabled = nil
 												end

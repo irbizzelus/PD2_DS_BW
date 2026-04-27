@@ -155,6 +155,8 @@ function GroupAIStateBesiege:DS_BW_updates()
 				LSM.detected_low = false
 				LSM.detected_high = false
 				LSM.adjustment_cooldown = Application:time()
+				LSM.detected_low_to_remember = nil -- prevent levels from immeidately going up or down after new assault begins
+				LSM.detected_high_to_remember = nil
 				was_AD_updated = true
 			end
 		end
@@ -657,4 +659,14 @@ Hooks:OverrideFunction(GroupAIStateBesiege, "_choose_best_group", function (self
 	end
 
 	return best_grp, best_grp_type
+end)
+
+-- after smoke is used increase flash/smoke CD by 2x to reduce smoke spam, while keeping flashbang spam
+local dsbw_orig_chk_group_use_smoke_grenade = GroupAIStateBesiege._chk_group_use_smoke_grenade
+Hooks:OverrideFunction(GroupAIStateBesiege, "_chk_group_use_smoke_grenade", function (self, group, task_data, detonate_pos)
+	local result = dsbw_orig_chk_group_use_smoke_grenade(self, group, task_data, detonate_pos)
+	if result then
+		task_data.use_smoke_timer = self._t + (math.lerp(tweak_data.group_ai.smoke_and_flash_grenade_timeout[1], tweak_data.group_ai.smoke_and_flash_grenade_timeout[2], math.rand(0, 1)^0.5) * 2)
+	end
+	return result
 end)
