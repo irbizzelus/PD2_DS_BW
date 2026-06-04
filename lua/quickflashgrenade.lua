@@ -51,18 +51,28 @@ function QuickFlashGrenade:update(unit, t, dt)
 					-- rocket from a 1300 grenade launcher
 					local projectile_str = "launcher_frag_m32"
 					if math.random() <= 0.333333333 then
-						-- 10% chance for the scarface pack rocket
+						-- 10% (?) chance for the scarface pack rocket
 						projectile_str = "rocket_ray_frag"
+						
+						-- spawn nade
+						local nade = ProjectileBase.throw_projectile(projectile_str, self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, -1), owner_id)
+						if nade then
+							if not DS_BW.explosive_trap_ids then
+								DS_BW.explosive_trap_ids = {}
+							end
+							DS_BW.explosive_trap_ids[nade:id()] = true
+						end
+					else
+						-- test: teargas instead of standard 1300dmg explosive. might revert later
+						local grenade = World:spawn_unit(Idstring("units/pd2_dlc_drm/weapons/smoke_grenade_tear_gas/smoke_grenade_tear_gas"), self._unit:position() + Vector3(0, 0, 1), Rotation(math.random() * 360, 0, 0))
+						grenade:base():set_properties({
+							radius = 350,
+							damage = 3.5,
+							duration = 10
+						})
+						grenade:base():detonate()
 					end
 					
-					-- spawn nade
-					local nade = ProjectileBase.throw_projectile(projectile_str, self._unit:position() + Vector3(0, 0, 1), Vector3(0, 0, -1), owner_id)
-					if nade then
-						if not DS_BW.explosive_trap_ids then
-							DS_BW.explosive_trap_ids = {}
-						end
-						DS_BW.explosive_trap_ids[nade:id()] = true
-					end
 				end
 			else
 				-- fire

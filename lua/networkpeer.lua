@@ -51,7 +51,7 @@ Hooks:Add("BaseNetworkSessionOnLoadComplete", "DS_BW_onloadcomplete", function(p
 	-- in case user restarts a match after changing difficulty, update lobby name to appropriate amount of +; - thats what dw+ would do
 	-- dsbw doesnt do anything other than just resets the name again, but, if dw+ is also installed, dsbw will now override dw+'s changes
 	DelayedCalls:Add("DS_BW_updatelobbyname_after_lobby_start_or_restart", 5.25, function()
-		if managers and managers.network and managers.network._session and managers.network.matchmake and Network:is_server() and Utils:IsInGameState() and Global.game_settings and Global.game_settings.difficulty and Global.game_settings.difficulty == "sm_wish" then
+		if managers and managers.network and managers.network._session and managers.network.matchmake and Network:is_server() and Utils:IsInGameState() and Global.game_settings and Global.game_settings.difficulty and Global.game_settings.difficulty == "sm_wish" and DS_BW.settings.lobbyname then
 			DS_BW.change_lobby_name(DS_BW.DS_difficultycheck)
 		end
 	end)

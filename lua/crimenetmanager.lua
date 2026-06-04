@@ -7,7 +7,8 @@ local DS_BW_orig_criment_job_gui = CrimeNetGui._create_job_gui
 function CrimeNetGui:_create_job_gui(data, type, fixed_x, fixed_y, fixed_location)
 	local result = DS_BW_orig_criment_job_gui(self, data, type, fixed_x, fixed_y, fixed_location)
 	
-	if result.side_panel:child("host_name"):text() == "DS, but Worse" then
+	local server_name = result.side_panel:child("host_name"):text()
+	if string.sub(server_name, 1, 13) == "DS, but Worse" then
 		result.side_panel:child("host_name"):set_color(DS_BW.color)
 	end
 	

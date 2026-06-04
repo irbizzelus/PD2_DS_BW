@@ -85,31 +85,40 @@ Hooks:PostHook(CopDamage, "_on_damage_received", "DS_BW_CopDamage_on_damage_rece
 			end
 		end
 		
-		function DS_BW:update_kpm_stats()
-			if Application:time() > DS_BW.kpm_tracker.update_after then
-				if DS_BW.Assault_info and (DS_BW.Assault_info.phase == "build" or DS_BW.Assault_info.phase == "sustain") then
-					DS_BW.kpm_tracker.update_after = Application:time() + 30
-					for i=1,4 do
-						if DS_BW.kpm_tracker.kills[i] > 0 then
-							DS_BW.kpm_tracker.kpm[i] = DS_BW.kpm_tracker.kills[i] * 2
-						else
-							DS_BW.kpm_tracker.kpm[i] = 0
-						end
-					end
-					DS_BW.kpm_tracker.kills = {0,0,0,0}
-				end
+		-- if killer was a friendly ai, add their kills to affect the kpm tracker
+		local is_killer_teamAI = false
+		for u_key, u_data in pairs(managers.groupai:state():all_AI_criminals()) do
+			if killer_unit == u_data.unit then
+				is_killer_teamAI = true
 			end
-			DelayedCalls:Add("DS_BW_kpm_updater", 0.05, function()
-				DS_BW:update_kpm_stats()
-			end)
 		end
 		
 		if killer_unit and not CopDamage.is_civilian(self._unit:base()._tweak_table) then
-			local killer_id = managers.network:session():peer_by_unit(killer_unit) and managers.network:session():peer_by_unit(killer_unit):id()
-			if killer_id and Application:time() < DS_BW.kpm_tracker.update_after then
-				DS_BW.kpm_tracker.kills[killer_id] = DS_BW.kpm_tracker.kills[killer_id]+1
+			local killer_id = killer_unit:id()
+			if not is_killer_teamAI then
+				killer_id = (managers.network:session():peer_by_unit(killer_unit) and managers.network:session():peer_by_unit(killer_unit):id()) or nil
 			end
-			DS_BW:update_kpm_stats()
+			if killer_id and Application:time() < DS_BW.kpm_tracker.update_after then
+				if is_killer_teamAI then
+					local team_ai_ids = {}
+					for u_key, u_data in pairs(managers.groupai:state():all_AI_criminals()) do
+						if alive(u_data.unit) then
+							table.insert(team_ai_ids, u_data.unit:id())
+						end
+					end
+					table.sort(team_ai_ids) -- since bot ids can update on client disconnect, sort from lowest id to highest so that higher bot ids will consistently correlate with higher kpm_tracker indexes
+					for index, bot_id in ipairs(team_ai_ids) do
+						if bot_id == killer_id then
+							DS_BW.kpm_tracker.kills[index + 1] = DS_BW.kpm_tracker.kills[index + 1] + 1
+						end
+					end
+				else
+					DS_BW.kpm_tracker.kills[killer_id] = DS_BW.kpm_tracker.kills[killer_id] + 1
+				end
+			end
+			if not DS_BW.kpm_updating then
+				DS_BW:update_kpm_stats()
+			end
 		end
 		
 	end

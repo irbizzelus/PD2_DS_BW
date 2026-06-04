@@ -31,9 +31,9 @@ Hooks:PostHook(CharacterTweakData, "_set_sm_wish", "DS_BW_remove_ECM_bullshit", 
 	
 	for i=1, #enemies do
 		if self[tostring(enemies[i])] and self[tostring(enemies[i])].ecm_vulnerability then
-			self[tostring(enemies[i])].ecm_vulnerability = 0.18
+			self[tostring(enemies[i])].ecm_vulnerability = 0.25
 			if self[tostring(enemies[i])].ecm_hurts and self[tostring(enemies[i])].ecm_hurts.ears then
-				self[tostring(enemies[i])].ecm_hurts.ears = 1.5
+				self[tostring(enemies[i])].ecm_hurts.ears = 1.3
 			end
 		end
 	end

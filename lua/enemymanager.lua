@@ -22,13 +22,13 @@ local function update_EnemyManager()
 				if not managers.groupai:state():whisper_mode() then -- stelf
 					if DS_BW._low_spawns_manager.level then
 						local tasks_per_lvl = {
-							[0] = 60,
-							[1] = 80,
-							[2] = 100,
+							[0] = 80,
+							[1] = 95,
+							[2] = 120,
 							[3] = 150,
-							[4] = 210,
-							[5] = 300,
-							[6] = 300, -- crashproofing in case i fucked something up elsewhere
+							[4] = 190,
+							[5] = 250,
+							[6] = 250, -- crashproofing in case i fucked something up elsewhere
 						}
 						local options_mul = DS_BW.settings.tasks_per_min_mul or 1
 						max_tasks_this_frame = math.ceil(tasks_per_lvl[DS_BW._low_spawns_manager.level] * options_mul * dt)

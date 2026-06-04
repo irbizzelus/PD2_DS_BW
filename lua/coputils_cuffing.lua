@@ -10,6 +10,41 @@ if not DS_BW.CopUtils then
 	-- How far can unit be to arrest a player 
 	DS_BW.CopUtils._arrest_action_radius = 125
 	
+	function DS_BW.CopUtils:IsArrestAllowed()
+		local grpai = managers.groupai:state()
+		if not grpai or not grpai:is_AI_enabled() or not grpai:enemy_weapons_hot() or grpai:whisper_mode() then
+			return false
+		end
+		
+		local non_disabled_plrs = 0
+		local total_players = 0
+		for u_key, u_data in pairs(grpai._player_criminals) do
+			total_players = total_players + 1
+			if u_data.status ~= "dead" and u_data.status ~= "disabled" then
+				non_disabled_plrs = non_disabled_plrs + 1
+			end
+		end
+
+		local non_disabled_ai = 0
+		for u_key, u_data in pairs(grpai._ai_criminals) do
+			if u_data.status ~= "dead" and u_data.status ~= "disabled" then
+				non_disabled_ai = non_disabled_ai + 1
+			end
+		end
+		
+		-- solo play rules. if we keep default rules, any player down becomes a shitshow of bots repetedly getting cuffed and then uncuffed by each other, while player's bleedout timer slowly depletes
+		if total_players == 1 and non_disabled_plrs == 0 then
+			return false
+		else
+			-- normal rules
+			if (non_disabled_ai + non_disabled_plrs) <= 1 then
+				return false
+			end
+		end
+		
+		return true
+	end
+	
 	-- Checks if the local player should be arrested
 	function DS_BW.CopUtils:CheckLocalMeleeDamageArrest(player_unit, attacker_unit, is_melee)
 		
@@ -21,6 +56,10 @@ if not DS_BW.CopUtils then
 		-- Check if this is our own player unit
 		if player_unit ~= managers.player:player_unit() then
 			return nil, "not local player unit"
+		end
+		
+		if not self:IsArrestAllowed() then
+			return false, "only 1 criminal alive"
 		end
 
 		local state = player_unit:movement():current_state()
@@ -45,6 +84,10 @@ if not DS_BW.CopUtils then
 	function DS_BW.CopUtils:CheckClientMeleeDamageArrest(player_unit, attacker_unit, is_melee)
 		if Network and Network:is_client() then
 			return nil, "not host, no husk check"
+		end
+		
+		if not self:IsArrestAllowed() then
+			return false, "only 1 criminal alive"
 		end
 
 		if not player_unit or not player_unit.alive or not player_unit:alive() or not player_unit.movement or not player_unit:movement() or not player_unit:movement()._interaction_tweak then
@@ -100,7 +143,7 @@ if not DS_BW.CopUtils then
 
 		-- Check every enemy in radius, make sure its actually an enemy, and pick closest one to come for player
 		for i, enemy in pairs(enemies) do
-			if self:AreUnitsEnemies(player_unit, enemy) then
+			if self:AreUnitsEnemies(player_unit, enemy) and not DS_BW.HotSpotLogic.HotSpotAssignedUnits[enemy:id()] then
 				local enemy_chartweak = enemy:base():char_tweak()
 				if enemy_chartweak and enemy_chartweak.access and enemy_chartweak.tags and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then
 					local ignored_logics = {
@@ -165,8 +208,9 @@ if not DS_BW.CopUtils then
 			result = self:CheckClientMeleeDamageArrest(player_unit, cop)
 		end
 		
-		local peer_id = managers.network:session():peer_by_unit(player_unit):id()
-		if result == "arrested" and (Application:time() > DS_BW.CopUtils.allowed_cuffing_time[peer_id]) and not DS_BW.peers_with_mod[peer_id] then
+		local peer_id = managers.network:session():peer_by_unit(player_unit) and managers.network:session():peer_by_unit(player_unit):id() 
+		local allowed_time = (peer_id and DS_BW.CopUtils.allowed_cuffing_time[peer_id]) or 0
+		if result == "arrested" and (Application:time() > allowed_time) and not DS_BW.peers_with_mod[peer_id] then
 			player_unit:movement():on_cuffed()
 			-- Make cop say a line
 			cop:sound():say("i03", true, false)
@@ -214,6 +258,10 @@ if not DS_BW.CopUtils then
 				if is_interacting then -- convert numerical value to boolean for the sake of consistency
 					is_interacting = true
 				end
+			elseif islocal == "bot" then
+				if not alive(player_unit) or not (player_unit:brain() and player_unit:brain()._logic_data and player_unit:brain()._logic_data.objective and player_unit:brain()._logic_data.objective.type and player_unit:brain()._logic_data.objective.type == "revive") then
+					is_interacting = false
+				end
 			elseif not player_unit or not player_unit.alive or not player_unit:alive() or not player_unit.movement or not player_unit:movement() or not player_unit:movement()._interaction_tweak then
 				is_interacting = false
 			end
@@ -226,8 +274,12 @@ if not DS_BW.CopUtils then
 					if not player_unit or not player_unit.alive or not player_unit:alive() or not player_unit.movement or not player_unit:movement() then
 						return
 					else
-						if islocal then
+						if islocal == true then
 							if not player_unit:movement().current_state or not player_unit:movement():current_state() or not player_unit:movement():current_state()._interact_params then
+								return
+							end
+						elseif islocal == "bot" then
+							if not alive(player_unit) or not (player_unit:brain() and player_unit:brain()._logic_data and player_unit:brain()._logic_data.objective and player_unit:brain()._logic_data.objective.type and player_unit:brain()._logic_data.objective.type == "revive") then
 								return
 							end
 						else
@@ -240,7 +292,7 @@ if not DS_BW.CopUtils then
 					if enemies and #enemies >= 1 then
 						-- Check every enemy in radius, make sure its actually an enemy
 						for i, enemy in pairs(enemies) do
-							if self:AreUnitsEnemies(player_unit, enemy) then
+							if self:AreUnitsEnemies(player_unit, enemy) and self:IsArrestAllowed() and not DS_BW.HotSpotLogic.HotSpotAssignedUnits[enemy:id()] then
 								-- cast a ray from player's to enemy's unit position, if enviroment is hit on the way, dont cuff. TLDR: LOS Check
 								-- positions are slighlty raised on vertical axis to avoid checks on feet level
 								local world_geometry_raycast = World:raycast( "ray", player_unit:position() + Vector3(0, 0, 50), enemy:position() + Vector3(0, 0, 80), "slot_mask", managers.slot:get_mask( "world_geometry" ))
@@ -252,7 +304,9 @@ if not DS_BW.CopUtils then
 									if not ignored_logics[enemy:brain()._current_logic_name] and not enemy:anim_data().act then
 										local enemy_chartweak = enemy:base():char_tweak()
 										if enemy_chartweak.access ~= "gangster" then
-											if (Application:time() > DS_BW.CopUtils.allowed_cuffing_time[managers.network:session():peer_by_unit(player_unit):id()]) or is_client_in_dsbw_lobby then
+											local peer_id = managers.network:session():peer_by_unit(player_unit) and managers.network:session():peer_by_unit(player_unit):id() 
+											local allowed_time = peer_id and DS_BW.CopUtils.allowed_cuffing_time[peer_id] or 0
+											if (Application:time() > allowed_time) or is_client_in_dsbw_lobby then
 												player_unit:movement():on_cuffed()
 												if not is_client_in_dsbw_lobby then
 													enemy:sound():say("i03", true, false)

@@ -10,6 +10,7 @@
 	"DS_BW_starting_adapt_diff_1": "0",
 	"DS_BW_starting_adapt_diff_2": "1",
 	"DS_BW_starting_adapt_diff_3": "2",
+	"DS_BW_starting_adapt_diff_4": "3",
 	"DS_BW_always_hard_heists": "All heists are hard",
 	"DS_BW_always_hard_heists_desc": "Forces all heists to be processed as \"Hard\", skipping the first easy wave during which enemies from lower difficulties recon the area.",
 	"DS_BW_tasks_per_min_mul": "Enemy Brain Speed",

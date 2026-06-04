@@ -33,7 +33,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("ecm", {
 		callback = function(sender)
-			local msg = "All enemies now only have a 18% chance to get stunned by the ECM feedback (instead of 80%-100%), and the stun duration is also shorter. All of Hacker's bonuses you get while PECM is active can still be received even if enemies are not visually stunned."
+			local msg = "All enemies now only have a 25% chance to get stunned by the ECM feedback (instead of 80%-100%), and the stun duration is also shorter. All of Hacker's bonuses you get while PECM is active can still be received even if enemies are not visually stunned."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else
@@ -69,11 +69,14 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("cuffs", {
 		callback = function(sender)	
-			local msg = "After you begin an inteaction, any enemy that gets close enough to you can handcuff you. All cops are able do this. You have 2 ways to get out if you are cuffed: get uncuffed by a teammate, or uncuff yourself after 60 seconds."
+			local msg = "After you begin an inteaction, any enemy that gets close enough to you can handcuff you. All cops are able do this. You have 2 ways to get out if you are cuffed: get uncuffed by a teammate, or uncuff by yourself after 60 seconds."
+			local msg2 = "This mechanic affects human and AI crew members, but it's completely disabled whenever only 1 crew member is left standing."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
+				DS_BW.CM:private_chat_message(sender:id(), msg2)
 			else
 				DS_BW.CM:public_chat_message(msg)
+				DS_BW.CM:public_chat_message(msg2)
 			end
 		end
 	})
@@ -134,7 +137,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 	
 	DS_BW.CM:add_command("flash", {
 		callback = function(sender)
-			local msg = "Flashbang detonates 3 times as quickly. If it's not destroyed, there is a 30% chance for the flashbang to create a fire field, 30% chance for it to explode, and a 15% chance for it to create a much deadlier explosion. Or it may just remain a flashbang."
+			local msg = "Flashbang detonates 3 times as quickly. If it's not destroyed, there is a 30% chance for the flashbang to create a fire field, 30% chance for it to become a teargas grenade, and a 15% chance for it to create an extremely deadly explosion. Or it may just remain a flashbang."
 			if sender:id() ~= 1 then
 				DS_BW.CM:private_chat_message(sender:id(), msg)
 			else
@@ -183,7 +186,7 @@ if Network:is_server() and DS_BW.DS_difficultycheck == true then
 		"This is real darkness. It's not death, or war, or child molestation. Real darkness has love for a face. The first death is in the heart, Harry.",
 		"The pain of your absence is sharp and haunting, and I would give anything not to know it; anything but never knowing you at all (which would be worse).",
 		"Science compels us to explode the sun.",
-		"You found a joke placeholder! There is not joke here yet. Hmmmm, maybe you can think of one?",
+		"You found a joke placeholder! There is no joke here yet. Hmmmm, maybe you can think of one?",
 		"Nicolas Cage is my waifu.",
 		"Cats are cute.",
 		"The Eiffel Tower can be 15 cm taller during the summer, due to thermal expansion meaning the iron heats up, the particles gain kinetic energy and take up more space.",

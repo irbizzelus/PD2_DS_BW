@@ -94,8 +94,11 @@ Hooks:PostHook(HuskPlayerMovement, "set_need_revive", "DSBW_on_husk_downed", fun
 	end
 	if need_revive and self._unit and alive(self._unit) then
 		local peer_id = managers.network:session():peer_by_unit(self._unit):id()
-		if peer_id and DS_BW.kpm_tracker.kills[peer_id] then
-			DS_BW.kpm_tracker.kills[peer_id] = (DS_BW.kpm_tracker.kills[peer_id] or 0) - 10
+		if peer_id and DS_BW.kpm_tracker.kills[peer_id] and not DS_BW.kpm_tracker.downed_this_update[peer_id] then
+			if alive(self._unit) and not self._unit:character_damage():arrested() then
+				DS_BW.kpm_tracker.kills[peer_id] = (DS_BW.kpm_tracker.kills[peer_id] or 0) - (DS_BW.kpm_tracker.down_adjustmets_per_lvl[DS_BW._low_spawns_manager.level] * 0.75)
+				DS_BW.kpm_tracker.downed_this_update[peer_id] = true
+			end
 		end
 	end
 end)

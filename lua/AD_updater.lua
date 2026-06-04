@@ -40,8 +40,8 @@ function DS_BW:ADU_Update()
 			return false
 		end
 		local CD_per_level = {
-			[0] = 10, -- failsafe
-			[1] = 10,
+			[0] = 25, -- failsafe
+			[1] = 25,
 			[2] = 50,
 			[3] = 75,
 			[4] = 100,
@@ -59,8 +59,9 @@ function DS_BW:ADU_Update()
 		LSM.level = level_floor_limit
 		LSM.detected_low = false
 		LSM.detected_high = false
+		LSM.gracing = nil
 		LSM.adjustment_cooldown = Application:time()
-		DS_BW:announce_adapt_diff()
+		DS_BW:announce_adapt_diff("increase")
 	end
 	
 	-- if lvl 1 is ever reached, never drop bellow it
@@ -69,6 +70,8 @@ function DS_BW:ADU_Update()
 	end
 	
 	local og_level = LSM.level
+	local ADL_update = {direction = "nowhere", reason = "no logic"}
+	local debug_timer = "??"
 	if spawn_adjustment_allowed() then
 		
 		local function kpm_threshold_check()
@@ -80,118 +83,223 @@ function DS_BW:ADU_Update()
 					hkpm = KPM.kpm[i]
 				end
 			end
-			avg_kpm = avg_kpm / (managers.groupai:state():num_alive_players() or 4)
-			if LSM.level < 5 and hkpm >= KPM.thresholds[LSM.level+1] and avg_kpm >= (KPM.thresholds[LSM.level+1] * 0.6) then
+			avg_kpm = avg_kpm / (managers.groupai:state():num_alive_criminals() or 4)
+			if LSM.level < 5 and hkpm >= (KPM.thresholds[LSM.level+1] * 1.5) and avg_kpm >= (KPM.thresholds[LSM.level+1] * 0.6 * 1.5) then
+				return "greatly_over" -- allows to go up regardless of map presense and faster
+			elseif LSM.level < 5 and hkpm >= KPM.thresholds[LSM.level+1] and avg_kpm >= (KPM.thresholds[LSM.level+1] * 0.6) then
 				return "over" -- allows to go up
-			elseif LSM.level >= 1 and hkpm < KPM.thresholds[LSM.level] then
+			elseif LSM.level >= 1 and (hkpm < (KPM.thresholds[LSM.level] * 0.66) or avg_kpm < (KPM.thresholds[LSM.level] * 0.6 * 0.66)) then
+				return "greatly_under" -- forces to go down faster
+			elseif LSM.level >= 1 and (hkpm < KPM.thresholds[LSM.level] or avg_kpm < (KPM.thresholds[LSM.level] * 0.6)) then
 				return "under" -- forces to go down
 			else
 				return "stable"
 			end
 		end
+		local kpm_status = kpm_threshold_check()
 		
-		if target_enemy_spawns and enemy_count <= (target_enemy_spawns * 0.96) and kpm_threshold_check() ~= "under" then
-			if not LSM.detected_high then
-				LSM.gracing = nil
-				if not LSM.detected_low then
-					LSM.detected_low = Application:time()
-				end
-				-- if fade is reached, remember detected low progress and reset it on new wave, otherwise we would get free progress during fade/anticipation
-				if LSM.detected_low_to_remember then
-					LSM.detected_low = Application:time() - LSM.detected_low_to_remember
-					LSM.detected_low_to_remember = nil
-				end
-				-- if spawns are too low, but our kpm is not high enough, delay level increases until kpm reaches the target
-				if kpm_threshold_check() == "stable" then
-					LSM.detected_low = LSM.detected_low + 0.01 -- based on "update rate" of this delayed-call-loop
-				end
-				local required_sustain_duration = { -- sustain requirements for x seconds to reach this level
-					[1] = 35,
-					[2] = 50,
-					[3] = 75,
-					[4] = 110,
-					[5] = 160,
-				}
-				if LSM.level <= 4 and (Application:time() - LSM.detected_low) > required_sustain_duration[LSM.level + 1] then
-					LSM.level = LSM.level + 1
-					if LSM.level > 5 then
-						LSM.level = 5
+		if kpm_status == "greatly_over" then
+			ADL_update.direction = "up"
+			ADL_update.reason = "GREAT KPM"
+		elseif kpm_status == "greatly_under" then
+			ADL_update.direction = "down"
+			ADL_update.reason = "TERRIBLE KPM"
+		elseif target_enemy_spawns and enemy_count <= (target_enemy_spawns * 0.96) then
+			if kpm_status == "under" then
+				ADL_update.direction = "nowhere"
+				ADL_update.reason = "low spawns, very low KPM"
+			elseif kpm_status == "stable" then
+				ADL_update.direction = "nowhere"
+				ADL_update.reason = "low spawns, not high enough KPM"
+			else
+				ADL_update.direction = "up"
+				ADL_update.reason = "low spawns, good KPM"
+			end
+		elseif kpm_status == "under" then
+			ADL_update.direction = "down"
+			ADL_update.reason = "high ENOUGH spawns, bad KPM"
+		elseif target_enemy_spawns and enemy_count > (target_enemy_spawns * 0.99) then
+			if kpm_status == "over" then
+				ADL_update.direction = "up"
+				ADL_update.reason = "high spawns, but good KPM"
+			else
+				ADL_update.direction = "down"
+				ADL_update.reason = "extremely high spawns, bad KPM"
+			end
+		end
+		
+		-- if we wanted to go up, but we were already going down, wait out a grace period; same vice versa
+		local function check_for_grace(wanted_dir)
+			if wanted_dir == "up" then
+				if LSM.detected_high then
+					if not LSM.gracing then
+						LSM.gracing = Application:time()
+					else
+						if (LSM.gracing + 35) < Application:time() then
+							LSM.detected_high = false
+							LSM.gracing = nil
+						end
 					end
-					LSM.detected_low = false
-					LSM.detected_high = false
-					LSM.adjustment_cooldown = Application:time()
-				end
-			else -- if performance is too good, but it was too bad recently, wait out a grace period before trying to go up
-				if not LSM.gracing then
-					LSM.gracing = Application:time()
+					ADL_update.direction = "nowhere"
+					ADL_update.reason = "GRACE b4 UP, wanted reason: "..tostring(ADL_update.reason)
+					return false
 				else
-					if (LSM.gracing + 10) < Application:time() then
-						LSM.detected_high = false
-						LSM.gracing = nil
+					LSM.gracing = nil
+					return true
+				end
+			elseif wanted_dir == "down" then
+				if LSM.detected_low then
+					if not LSM.gracing then
+						LSM.gracing = Application:time()
+					else
+						if (LSM.gracing + 35) < Application:time() then
+							LSM.detected_low = false
+							LSM.gracing = nil
+						end
 					end
+					ADL_update.direction = "nowhere"
+					ADL_update.reason = "GRACE b4 DOWN, wanted reason: "..tostring(ADL_update.reason)
+					return false
+				else
+					LSM.gracing = nil
+					return true
 				end
 			end
-		elseif (target_enemy_spawns and enemy_count > (target_enemy_spawns * 0.96)) or kpm_threshold_check() == "under" then
+		end
+		
+		if ADL_update.direction == "up" and check_for_grace(ADL_update.direction) then
+			
+			-- start timer to go up
 			if not LSM.detected_low then
+				LSM.detected_low = Application:time()
+			end
+			
+			-- if fade is reached, remember the timer progress and adjust it on new wave, otherwise we would get free progress during fade/anticipation. rememberance is saved in groupaibesiege
+			if LSM.detected_low_to_remember then
+				LSM.detected_low = Application:time() - LSM.detected_low_to_remember + 20 -- prevent instant level adjusment on new wave start by adding some extra time
+				LSM.detected_low_to_remember = nil
+			end
+			
+			-- sustain requirements for x seconds to reach this level
+			local required_sustain_duration = {
+				[1] = 40,
+				[2] = 65,
+				[3] = 90,
+				[4] = 130,
+				[5] = 180,
+			}
+			-- make adjustments faster if kpm too high
+			if kpm_status == "greatly_over" then
+				for i=1, 5 do
+					required_sustain_duration[i] = required_sustain_duration[i] * 0.7
+				end
+			end
+			-- make adjustments faster if we r playing on a "hard" heist
+			if DS_BW:is_hard_heist() then
+				for i=1, 5 do
+					required_sustain_duration[i] = required_sustain_duration[i] * 0.8
+				end
+			end
+			
+			-- debug
+			if required_sustain_duration[LSM.level + 1] and LSM.detected_low then
+				debug_timer = math.floor(required_sustain_duration[LSM.level + 1] - (Application:time() - LSM.detected_low))
+			end
+			adl_status = "going UP in: "..tostring(timer)
+			
+			-- make adjustment when timer is reached
+			if LSM.level <= 4 and (Application:time() - LSM.detected_low) > required_sustain_duration[LSM.level + 1] then
+				LSM.level = LSM.level + 1
+				if LSM.level > 5 then
+					LSM.level = 5
+				end
+				LSM.detected_low = false
+				LSM.detected_high = false
 				LSM.gracing = nil
-				if LSM.level > 0 and not LSM.detected_high then
-					LSM.detected_high = Application:time()
+				LSM.adjustment_cooldown = Application:time()
+			end
+			
+		elseif ADL_update.direction == "down" and check_for_grace(ADL_update.direction) then
+			
+			-- start timer to go down
+			if not LSM.detected_high then
+				LSM.detected_high = Application:time()
+			end
+			
+			-- if fade is reached, remember detected high progress and reset it on new wave, otherwise we would get free progress during fade/anticipation
+			if LSM.detected_high_to_remember then
+				LSM.detected_high = Application:time() - LSM.detected_high_to_remember + 20 -- prevent instant level adjusment on new wave start by adding some extra time
+				LSM.detected_high_to_remember = nil
+			end
+			
+			-- sustain requirements for x seconds to drop from this level
+			local required_sustain_duration = {
+				[2] = 100,
+				[3] = 130,
+				[4] = 170,
+				[5] = 200,
+			}
+			-- make adjustments faster if kpm too low
+			if kpm_status == "greatly_under" then
+				for i=2, 5 do
+					required_sustain_duration[i] = required_sustain_duration[i] * 0.7
 				end
-				-- if fade is reached, remember detected high progress and reset it on new wave, otherwise we would get free progress during fade/anticipation
-				if LSM.detected_high_to_remember then
-					LSM.detected_high = Application:time() - LSM.detected_high_to_remember
-					LSM.detected_high_to_remember = nil
+			end
+			-- make adjustments faster if we r playing on a "hard" heist
+			if DS_BW:is_hard_heist() then
+				for i=2, 5 do
+					required_sustain_duration[i] = required_sustain_duration[i] * 0.8
 				end
-				local required_sustain_duration = { -- sustain requirements for x seconds to drop from this level
-					[1] = 140,
-					[2] = 140,
-					[3] = 180,
-					[4] = 240,
-					[5] = 300,
-				}
-				if LSM.level > 0 and (Application:time() - LSM.detected_high) > required_sustain_duration[LSM.level] and (LSM.level > level_floor_limit) then
-					LSM.level = LSM.level - 1
-					if LSM.level < 0 then
-						LSM.level = 0
-					end
-					LSM.detected_low = false
-					LSM.detected_high = false
-					LSM.adjustment_cooldown = Application:time()
+			end
+			
+			-- debug
+			if required_sustain_duration[LSM.level] and LSM.detected_high then
+				debug_timer = math.floor(required_sustain_duration[LSM.level] - (Application:time() - LSM.detected_high))
+			end
+			
+			-- make adjustment when timer is reached
+			if LSM.level > 1 and (Application:time() - LSM.detected_high) > required_sustain_duration[LSM.level] and (LSM.level > level_floor_limit) then
+				LSM.level = LSM.level - 1
+				if LSM.level < 0 then
+					LSM.level = 0
 				end
-			else -- if performance is too bad, but it was too good recently, wait out a grace period before trying to go down
-				if not LSM.gracing then
-					LSM.gracing = Application:time()
-				else
-					if (LSM.gracing + 10) < Application:time() then
-						LSM.detected_low = false
-						LSM.gracing = nil
-					end
-				end
+				LSM.detected_low = false
+				LSM.detected_high = false
+				LSM.gracing = nil
+				LSM.adjustment_cooldown = Application:time()
+			end
+			
+		elseif ADL_update.direction == "nowhere" then
+			if LSM.detected_low then
+				LSM.detected_low = LSM.detected_low + 0.01
+			end
+			if LSM.detected_high then
+				LSM.detected_high = LSM.detected_high + 0.01
 			end
 		end
 		
 		-- add delay to DR penalty application, and also update player-based DR's only once every x seconds
 		local function should_add_DR()
 			if DS_BW.Assault_info.phase ~= "sustain" then -- reset delay during non-sutain phases
-				KPM.update_cooldown = -1
+				KPM.DR_update_cooldown = -1
 			end
-			if KPM.update_cooldown > 0 and Application:time() > KPM.update_cooldown then
-				KPM.update_cooldown = -1
+			if KPM.DR_update_cooldown > 0 and Application:time() > KPM.DR_update_cooldown then
+				KPM.DR_update_cooldown = -1
 				return true
 			else
-				if KPM.update_cooldown < 0 then
+				if KPM.DR_update_cooldown < 0 then
 					local DR_delay = {
-						[4] = 90,
-						[5] = 140,
+						[4] = 30,
+						[5] = 275,
 					}
-					KPM.update_cooldown = Application:time() + (DR_delay[LSM.level] or 30)
+					KPM.DR_update_cooldown = Application:time() + (DR_delay[LSM.level] or 30)
 				end
 			end
 			return false
 		end
 		
 		if LSM.level <= og_level and LSM.level <= 3 then -- remove penalties if dropped to lvl <=3 and not permanent
-			KPM.update_cooldown = -1
+			KPM.DR_update_cooldown = -1
 			for i=1,4 do
 				if KPM.penalties[i].amount > 0 and not KPM.penalties[i].is_perma then
 					KPM.penalties[i].amount = 0
@@ -232,25 +340,88 @@ function DS_BW:ADU_Update()
 		-- extend current assault duration if lvl goes up, only once per wave
 		if og_level ~= LSM.level then
 			if LSM.level > og_level and (DS_BW.Assault_info.number >= 2 or DS_BW:is_hard_heist()) and not LSM.current_wave_was_extended then
-				managers.groupai:state()._task_data.assault.phase_end_t = managers.groupai:state()._task_data.assault.phase_end_t + 180
+				managers.groupai:state()._task_data.assault.phase_end_t = managers.groupai:state()._task_data.assault.phase_end_t + 120
 				managers.groupai:state()._task_data.assault.force_spawned = -500 -- force the wave end to be reached by time out instead of outkilling. unless players are THAT good
 				LSM.current_wave_was_extended = true
 				DS_BW:announce_adapt_diff("wave_extended")
 			else
-				DS_BW:announce_adapt_diff()
+				if og_level < LSM.level then
+					DS_BW:announce_adapt_diff("increase")
+				else
+					DS_BW:announce_adapt_diff("decrease")
+				end
 			end
-			KPM.update_cooldown = -1
+			KPM.DR_update_cooldown = -1
 		end
 		
 	else
 		LSM.detected_low = false
 		LSM.detected_high = false
+		LSM.gracing = nil
+	end
+	
+	-- debug stuff. will prob crash without vhud+ cause im using it's OutlinedText hud class, but who cares
+	DS_BW.ADL_debug = DS_BW.ADL_debug or false
+	local function ADL_debug()
+		local pm_var_name = "DSBW_ADL_DEBUG"
+		if not managers.hud or not managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2) then
+			return
+		end
+		local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_PD2)
+		local x_position = 520
+		local y_position = 50
+		
+		if not managers.player[pm_var_name] then
+			managers.player[pm_var_name] = OutlinedText:new(hud.panel, {
+				name = "DSBW_ADL_DEBUG",
+				visible = true,
+				text = "default",
+				valign = "center",
+				align = "center",
+				layer = 5,
+				wrap = true,
+				word_wrap = true,
+				color = Color(1, 1, 1, 1),
+				font = tweak_data.menu.pd2_large_font,
+				font_size = math.floor(18),
+				w = 240,
+				h = 120,
+				x = x_position,
+				y = y_position
+			})
+			managers.player[pm_var_name]:set_text("nil")
+			managers.player[pm_var_name]:set_outlines_visible(true)
+			managers.player[pm_var_name]:set_alpha(1)
+			managers.player[pm_var_name]:show()
+			managers.player[pm_var_name]:set_visible(true)
+		else
+			local dir = ADL_update.direction
+			managers.player[pm_var_name]:set_text("ADL - Current: "..tostring(LSM.level)..", Going: "..string.upper(dir).."\n Reason: "..ADL_update.reason.."\n Timer: "..tostring(debug_timer))
+			if dir == "up" then
+				managers.player[pm_var_name]:set_color(Color.green)
+			elseif dir == "down" then
+				managers.player[pm_var_name]:set_color(Color.red)
+			else
+				managers.player[pm_var_name]:set_color(Color.white)
+			end
+			if ADL_update.reason ~= (DS_BW.ADL_debug_latest_reason or "") then
+				DS_BW.ADL_debug_latest_reason = ADL_update.reason
+				log("[DS_BW] Latest_remembered_ADL_update_reason: "..ADL_update.reason)
+			end
+		end
+	end
+	if DS_BW.ADL_debug then
+		ADL_debug()
+	else
+		if managers.player["DSBW_ADL_DEBUG"] then
+			managers.player["DSBW_ADL_DEBUG"]:set_visible(false)
+		end
 	end
 	
 	-- enemy presence updates
 	local grpai = managers.groupai:state()
 	if DS_BW._dsbw_new_winter_penalty_applied_ang_going then
-		tweak_data.group_ai.besiege.assault.force_balance_mul = {4.5,4.5,4.5,4.5}
+		tweak_data.group_ai.besiege.assault.force_balance_mul = {8,8,8,8}
 		grpai._task_data.assault.force = math.ceil(grpai:_get_difficulty_dependent_value(grpai._tweak_data.assault.force) * grpai:_get_balancing_multiplier(grpai._tweak_data.assault.force_balance_mul))
 		tweak_data.group_ai.special_unit_spawn_limits = {
 			shield = 99,
@@ -262,11 +433,11 @@ function DS_BW:ADU_Update()
 	else
 		-- max on the map
 		local pool_muls = {
-			[1] = 1.25,
-			[2] = 1.4,
-			[3] = 1.7,
-			[4] = 2,
-			[5] = 2.5,
+			[1] = 1.25, -- 35
+			[2] = 1.43, -- 40
+			[3] = 1.61, -- 45
+			[4] = 1.79, -- 50
+			[5] = 2.08, -- 58
 		}
 		local mul = pool_muls[LSM.level] or 1
 		tweak_data.group_ai.besiege.assault.force_balance_mul = {
@@ -359,7 +530,11 @@ function DS_BW:announce_adapt_diff(reason)
 	if reason == "early_fade" then
 		msg = "Assault is fading. Adaptive difficulty level increased to "..lvl_str.." - /adl"
 	elseif reason == "wave_extended" then
-		msg = "Adaptive difficulty level increased to "..lvl_str..". Current assault duration was extended by 180 seconds - /adl"
+		msg = "Adaptive difficulty level increased to "..lvl_str..". Current assault duration was extended by 120 seconds - /adl"
+	elseif reason == "increase" then
+		msg = "Adaptive difficulty level increased to "..lvl_str.." - /adl"
+	elseif reason == "decrease" then
+		msg = "Adaptive difficulty level decreased to "..lvl_str.." - /adl"
 	end
 	if DS_BW.settings.ADL_announcements then
 		if Network:is_server() and DS_BW and DS_BW.DS_difficultycheck then

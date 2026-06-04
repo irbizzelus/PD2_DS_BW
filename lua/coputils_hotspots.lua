@@ -153,7 +153,9 @@ if not DS_BW.HotspotLogic then
 		
 		-- after every spot heat was evaluated, set hotspot priority based on said heat
 		for hotspotID, hotspotData in pairs(self.HotSpotList) do
-			if hotest_spot_1.id == hotspotID then
+			if hotspotData._reason == "Player_Area" then
+				self.HotSpotList[hotspotID]._priority = 4
+			elseif hotest_spot_1.id == hotspotID then
 				self.HotSpotList[hotspotID]._priority = 3
 			elseif hotest_spot_2.id == hotspotID then
 				self.HotSpotList[hotspotID]._priority = 2
@@ -178,7 +180,7 @@ if not DS_BW.HotspotLogic then
 		-- after hotspots were assigned with priority, force bots to move to the top 3, and disengage from other areas
 		for hotspotID, hotspotData in pairs(self.HotSpotList) do
 			-- always assgin units to our top 3 spots
-			if (hotspotData._priority == 3 or hotspotData._priority == 2 or hotspotData._priority == 1) then
+			if (hotspotData._priority == 4 or hotspotData._priority == 3 or hotspotData._priority == 2 or hotspotData._priority == 1) then
 				self:UpdateHighPriorityHotSpot(self.HotSpotList[hotspotID])
 			elseif hotspotData._priority == 0 and tblsize(hotspotData.assigned_units) > 0 then
 				self:DiscardCopsFromHotSpotArea(self.HotSpotList[hotspotID])
@@ -241,11 +243,24 @@ if not DS_BW.HotspotLogic then
 				heat = heat + #players * 20
 			end
 			
-			-- if newly wanted player spot has higher heat then an already existing player spot, ignore it
+			-- if newly wanted player spot has lower heat then an already existing player spot, ignore it
 			if tblsize(self.HotSpotList) >= 1 then
 				for hotspotID, hotspotData in pairs(self.HotSpotList) do
 					if hotspotData._reason == "Player_Area" and hotspotData._heat >= heat then
 						return
+					end
+				end
+			end
+			
+			-- if we got so far, clear any Player_Areas that already exist, to limit them to only a max of 1
+			if tblsize(self.HotSpotList) >= 1 then
+				for hotspotID, hotspotData in pairs(self.HotSpotList) do
+					if hotspotData._reason == "Player_Area" then
+						for id, unit in pairs(self.HotSpotList[hotspotID].assigned_units) do
+							self.HotSpotAssignedUnits[id] = nil
+							self.HotSpotActiveUnits[id] = nil
+						end
+						self.HotSpotList[hotspotID] = nil
 					end
 				end
 			end
@@ -612,15 +627,18 @@ if not DS_BW.HotspotLogic then
 		
 		-- highest priority gets max, then -1, then -2, to avoid huge groups from being wasted on such tasks
 		local function get_max_cop_amount(hotspot)
-			local max_cops = self._maxCopsPerHotSpot
-			if hotspot._priority == 2 then
-				max_cops = max_cops - 1
-			elseif hotspot._priority == 1 then
-				max_cops = max_cops - 2
-			elseif hotspot._priority ~= 3 then
-				log("[DS_BW] High priority hotspot updater got a request from a non-high priority hotspot. wtf?")
+			if hotspot._priority == 0 then
+				log("[DS_BW - hotspots] UpdateHighPriorityHotSpot got a request from a non-high priority hotspot. wtf?")
 			end
-			return max_cops
+			local max_cops = self._maxCopsPerHotSpot
+			local cops_per_priority = {
+				[4] = max_cops,
+				[3] = max_cops,
+				[2] = max_cops-1,
+				[1] = max_cops-2,
+				[0] = 0,
+			}
+			return cops_per_priority[hotspot._priority]
 		end
 		
 		-- later we need to check if enemy is actualy an enemy when compared to players, for that we would need to grab a player unit
@@ -717,7 +735,14 @@ if not DS_BW.HotspotLogic then
 						inactive = true,
 						intimidated = true,
 					}
-					if self:AreUnitsEnemies(player_unit, enemy) and not ignored_logics[enemy:brain()._current_logic_name] then
+					local u_data = enemy:unit_data()
+					local function spawned_recently_enough() -- prevent assingment to spots if unit just spawned in, to avoid some weird logic issues
+						if u_data and u_data._DSBW_unit_spawned_at and (Application:time() - u_data._DSBW_unit_spawned_at) < 10 then
+							return true
+						end
+						return false
+					end
+					if self:AreUnitsEnemies(player_unit, enemy) and not ignored_logics[enemy:brain()._current_logic_name] and not spawned_recently_enough() then
 						local enemy_chartweak = enemy:base():char_tweak()
 						-- avoid snipers from ditching their sniper spots (ngl if was pretty funny tho), and some other units from attacking hotspots
 						if enemy_chartweak.access and enemy_chartweak.access ~= "tank" and enemy_chartweak.access ~= "gangster" and enemy_chartweak.access ~= "sniper" and enemy_chartweak.access ~= "spooc" and enemy_chartweak.tags and not table.contains(enemy_chartweak.tags, "phalanx_vip") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_reinforced_shield") and not table.contains(enemy_chartweak.tags, "DS_BW_tag_miniboss") then

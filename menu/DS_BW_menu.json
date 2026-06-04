@@ -36,6 +36,7 @@
 				"DS_BW_starting_adapt_diff_1",
 				"DS_BW_starting_adapt_diff_2",
 				"DS_BW_starting_adapt_diff_3",
+				"DS_BW_starting_adapt_diff_4",
 			],
 			"value" : "starting_adapt_diff",
 			"default_value" : 1

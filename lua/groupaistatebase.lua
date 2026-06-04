@@ -307,6 +307,7 @@ end)
 -- adjust the "diff": controls chosen squads and their spawn chances using groupaitweakdata vars
 local previous_phase = ""
 local first_assault_update = false
+local second_assault_update = false
 local orig_diff = GroupAIStateBase.set_difficulty
 Hooks:OverrideFunction(GroupAIStateBase, "set_difficulty", function (self, value)
 	
@@ -315,28 +316,78 @@ Hooks:OverrideFunction(GroupAIStateBase, "set_difficulty", function (self, value
 		return
 	end
 	
-	local heist_without_recon_1st_wave = DS_BW:is_hard_heist() or false
-	
 	-- assault 0 is everything before first assault's build phase
 	if self._assault_number == 0  then
 		value = 0.05
-	elseif self._assault_number == 1 and not self._hunt_mode and not heist_without_recon_1st_wave then
-		-- first x seconds of first assault have 0.1 diff, which spawns blue/green swats, after x secs we spawn grey and lighter zeal swats untill 1st wave ends
-		if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
-			local diff_update_delay = 25
-			if Global.level_data and Global.level_data.level_id == "nmh" then
-				diff_update_delay = 15
+	elseif self._assault_number == 1 and not self._hunt_mode then
+		
+		if DS_BW:is_hard_heist() then
+		
+			-- first x seconds of assault have lower diff, which spawns blue/green or grey/zeal mixes
+			if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
+				local diff_update_delay = 40
+				if Global.level_data and Global.level_data.level_id == "nmh" then
+					diff_update_delay = 25
+				end
+				if DS_BW._low_spawns_manager.level == 0 then
+					diff_update_delay = diff_update_delay * 0.5
+				end
+				DelayedCalls:Add("DS_BW_update_first_assault_diff_value", diff_update_delay, function()
+					first_assault_update = true
+				end)
 			end
+			
+			if self._task_data.assault.phase ~= "anticipation" and not first_assault_update then
+				value = 0.5
+			else
+				value = 1
+			end
+			
+			-- make break in-between 1st and 2nd assault shorter if we are playing on heists without first easy assault, to make them a bit harder
+			if self._task_data.assault.phase == "anticipation" or self._task_data.assault.phase == "fade" then
+				value = 0.5
+			end
+		
+		else
+		
+			if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
+				local diff_update_delay = 50
+				if Global.level_data and Global.level_data.level_id == "nmh" then
+					diff_update_delay = 25
+				end
+				if DS_BW._low_spawns_manager.level == 0 then
+					diff_update_delay = diff_update_delay * 0.5
+				end
+				DelayedCalls:Add("DS_BW_update_first_assault_diff_value", diff_update_delay, function()
+					first_assault_update = true
+				end)
+			end
+			
+			if self._task_data.assault.phase ~= "anticipation" and not first_assault_update then
+				value = 0.05
+			else
+				value = 0.5
+			end
+		
+		end
+	elseif self._assault_number == 2 and not DS_BW:is_hard_heist() then
+		
+		if self._task_data.assault.phase == "sustain" and previous_phase == "build" then
+			local diff_update_delay = 50
+			if Global.level_data and Global.level_data.level_id == "nmh" then
+				diff_update_delay = 25
+			end
+			if DS_BW._low_spawns_manager.level == 0 then
+					diff_update_delay = diff_update_delay * 0.5
+				end
 			DelayedCalls:Add("DS_BW_update_first_assault_diff_value", diff_update_delay, function()
-				first_assault_update = true
+				second_assault_update = true
 			end)
 		end
 		
-		if self._task_data.assault.phase ~= "anticipation" and not first_assault_update and value ~= 0.1 then
-			value = 0.05
-		elseif self._task_data.assault.phase ~= "anticipation" and first_assault_update and value ~= 0.5 then
+		if self._task_data.assault.phase ~= "anticipation" and not second_assault_update then
 			value = 0.5
-		elseif self._task_data.assault.phase == "anticipation" and value ~= 1 then
+		else
 			value = 1
 		end
 		
@@ -346,10 +397,8 @@ Hooks:OverrideFunction(GroupAIStateBase, "set_difficulty", function (self, value
 				self:try_spawn_DSBW_miniboss()
 			end)
 		end
-		-- make break in-between 1st and 2nd assault shorter if we are playing on heists without first easy assault, to make them a bit harder
-		if heist_without_recon_1st_wave and self._assault_number == 1 and (self._task_data.assault.phase == "anticipation" or self._task_data.assault.phase == "fade") then
-			value = 0.5
-		elseif value ~= 1 then
+		
+		if value ~= 1 then
 			value = 1
 		end
 	end

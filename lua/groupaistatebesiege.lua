@@ -26,16 +26,20 @@ Hooks:OverrideFunction(GroupAIStateBesiege, "_queue_police_upd_task", function (
 	end
 	
 	local ADL_multipliers = {
-		[1] = 0.8,
-		[2] = 0.7,
-		[3] = 0.6,
-		[4] = 0.55,
+		[0] = 0.25,
+		[1] = 1,
+		[2] = 0.8,
+		[3] = 0.66,
+		[4] = 0.5,
 		[5] = 0.5,
 	}
 	local update_multiplier = ADL_multipliers[DS_BW._low_spawns_manager.level] or 1
 	
 	if DS_BW.Miniboss_info.is_alive then
-		update_multiplier = update_multiplier * 0.5
+		update_multiplier = update_multiplier * 0.7
+	end
+	if managers.groupai:state() and managers.groupai:state()._hunt_mode then
+		update_multiplier = update_multiplier * 0.85
 	end
 	
 	if not self._police_upd_task_queued then
@@ -665,7 +669,7 @@ end)
 local dsbw_orig_chk_group_use_smoke_grenade = GroupAIStateBesiege._chk_group_use_smoke_grenade
 Hooks:OverrideFunction(GroupAIStateBesiege, "_chk_group_use_smoke_grenade", function (self, group, task_data, detonate_pos)
 	local result = dsbw_orig_chk_group_use_smoke_grenade(self, group, task_data, detonate_pos)
-	if result then
+	if result and DS_BW and DS_BW.DS_difficultycheck then
 		task_data.use_smoke_timer = self._t + (math.lerp(tweak_data.group_ai.smoke_and_flash_grenade_timeout[1], tweak_data.group_ai.smoke_and_flash_grenade_timeout[2], math.rand(0, 1)^0.5) * 2)
 	end
 	return result

@@ -46,7 +46,7 @@ Hooks:PostHook(ElementSpawnEnemyDummy, "produce", "DS_BW_spawn_more_shit", funct
 		local unit_done = safe_spawn_unit(unit_name, pos, rot)
 		local team_id = tweak_data.levels:get_default_team_ID(unit_done:base():char_tweak().access == "gangster" and "gangster" or "combatant")
 		unit_done:movement():set_team(grpai:team_data( team_id ))
-		if og_unit:brain()._logic_data.group then
+		if alive(og_unit) and og_unit:brain() and og_unit:brain()._logic_data.group then
 			grpai:assign_enemy_to_existing_group(unit_done, og_unit:brain()._logic_data.group)
 		else
 			grpai:assign_enemy_to_group_ai(unit_done, team_id)
@@ -79,77 +79,152 @@ Hooks:PostHook(ElementSpawnEnemyDummy, "produce", "DS_BW_spawn_more_shit", funct
 	if DS_BW._dsbw_new_winter_penalty_applied_ang_going then
 		spawn_mul = spawn_mul + 2
 	end
-	if DS_BW.Miniboss_info.is_alive then
-		spawn_mul = spawn_mul + 2
-	end
-	if grpai._hunt_mode then
-		spawn_mul = spawn_mul + 1
+	
+	-- captain not affecting spawns at level 5 is probably not a huge loss, since his penalties are genreally "whatever" if compared to diff 5 overall
+	if spawn_mul > 5 then
+		spawn_mul = 5
 	end
 	
-	-- only multiply specific unit types to increase spawns. start at adl lvl x, multiply spawn amount by y, with round downs
-	local enemy_whitelist = {
-		------ AMERICA ------
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {start = 1, mul = 0.8},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {start = 0, mul = 1},
-		[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()] = {start = 2, mul = 0.7},
-		[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()] = {start = 2, mul = 0.6},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()] = {start = 2, mul = 0.55},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()] = {start = 2, mul = 0.4},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()] = {start = 3, mul = 0.5},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()] = {start = 3, mul = 0.4},
-		[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()] = {start = 4, mul = 0.4},
-		[("units/pd2_dlc_drm/characters/ene_bulldozer_medic/ene_bulldozer_medic"):key()] = {start = 4, mul = 0.25},
-		------ RUSSIA ------
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_heavy_g36/ene_akan_fbi_heavy_g36"):key()] = {start = 1, mul = 0.8},
-		[("units/pd2_dlc_mad/characters/ene_akan_cs_cop_ak47_ass/ene_akan_cs_cop_ak47_ass"):key()] = {start = 0, mul = 1},
-		[("units/pd2_dlc_mad/characters/ene_akan_medic_ak47_ass/ene_akan_medic_ak47_ass"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_mad/characters/ene_akan_medic_r870/ene_akan_medic_r870"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_mad/characters/ene_akan_cs_tazer_ak47_ass/ene_akan_cs_tazer_ak47_ass"):key()] = {start = 2, mul = 0.6},
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_shield_dw_sr2_smg/ene_akan_fbi_shield_dw_sr2_smg"):key()] = {start = 2, mul = 0.55},
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_saiga/ene_akan_fbi_tank_saiga"):key()] = {start = 2, mul = 0.4},
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_spooc_asval_smg/ene_akan_fbi_spooc_asval_smg"):key()] = {start = 3, mul = 0.5},
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_r870/ene_akan_fbi_tank_r870"):key()] = {start = 3, mul = 0.4},
-		[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_rpk_lmg/ene_akan_fbi_tank_rpk_lmg"):key()] = {start = 4, mul = 0.4},
-		------ ZOMBIE ------
-		[("units/pd2_dlc_hvh/characters/ene_swat_heavy_hvh_1/ene_swat_heavy_hvh_1"):key()] = {start = 1, mul = 0.8},
-		[("units/pd2_dlc_hvh/characters/ene_swat_hvh_1/ene_swat_hvh_1"):key()] = {start = 0, mul = 1},
-		[("units/pd2_dlc_hvh/characters/ene_medic_hvh_m4/ene_medic_hvh_m4"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_hvh/characters/ene_medic_hvh_r870/ene_medic_hvh_r870"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_hvh/characters/ene_tazer_hvh_1/ene_tazer_hvh_1"):key()] = {start = 2, mul = 0.6},
-		[("units/pd2_dlc_hvh/characters/ene_shield_hvh_1/ene_shield_hvh_1"):key()] = {start = 2, mul = 0.55},
-		[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_1/ene_bulldozer_hvh_1"):key()] = {start = 2, mul = 0.4},
-		[("units/pd2_dlc_hvh/characters/ene_spook_hvh_1/ene_spook_hvh_1"):key()] = {start = 3, mul = 0.5},
-		[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_2/ene_bulldozer_hvh_2"):key()] = {start = 3, mul = 0.4},
-		[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_3/ene_bulldozer_hvh_3"):key()] = {start = 4, mul = 0.4},
-		------ MURKYWATER ------
-		[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = {start = 1, mul = 0.8},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = {start = 0, mul = 1},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_medic/ene_murkywater_medic"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_medic_r870/ene_murkywater_medic_r870"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_tazer/ene_murkywater_tazer"):key()] = {start = 2, mul = 0.6},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_shield/ene_murkywater_shield"):key()] = {start = 2, mul = 0.55},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_2/ene_murkywater_bulldozer_2"):key()] = {start = 2, mul = 0.4},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_cloaker/ene_murkywater_cloaker"):key()] = {start = 3, mul = 0.5},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_3/ene_murkywater_bulldozer_3"):key()] = {start = 3, mul = 0.4},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_4/ene_murkywater_bulldozer_4"):key()] = {start = 4, mul = 0.4},
-		[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_medic/ene_murkywater_bulldozer_medic"):key()] = {start = 4, mul = 0.25},
-		------ FEDERALES ------
-		[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = {start = 1, mul = 0.8},
-		[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = {start = 0, mul = 1},
-		[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale/ene_swat_medic_policia_federale"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale_r870/ene_swat_medic_policia_federale_r870"):key()] = {start = 2, mul = 0.7},
-		[("units/pd2_dlc_bex/characters/ene_swat_tazer_policia_federale/ene_swat_tazer_policia_federale"):key()] = {start = 2, mul = 0.6},
-		[("units/pd2_dlc_bex/characters/ene_swat_shield_policia_federale_mp9/ene_swat_shield_policia_federale_mp9"):key()] = {start = 2, mul = 0.55},
-		[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_saiga/ene_swat_dozer_policia_federale_saiga"):key()] = {start = 2, mul = 0.4},
-		[("units/pd2_dlc_bex/characters/ene_swat_cloaker_policia_federale/ene_swat_cloaker_policia_federale"):key()] = {start = 3, mul = 0.5},
-		[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_r870/ene_swat_dozer_policia_federale_r870"):key()] = {start = 3, mul = 0.4},
-		[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_m249/ene_swat_dozer_policia_federale_m249"):key()] = {start = 4, mul = 0.4},
-		[("units/pd2_dlc_bex/characters/ene_swat_dozer_medic_policia_federale/ene_swat_dozer_medic_policia_federale"):key()] = {start = 4, mul = 0.25},
+	-- for every spawned in unit, spawn x copies of said unit. scales with ADL 
+	local enemy_whitelist = {}
+	------ AMERICA ------
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()] = {
+		[0] = 0,
+		[1] = 1,
+		[2] = 1,
+		[3] = 2,
+		[4] = 2,
+		[5] = 3,
 	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()] = {
+		[0] = 1,
+		[1] = 1,
+		[2] = 2,
+		[3] = 2,
+		[4] = 3,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 1,
+		[3] = 2,
+		[4] = 2,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 1,
+		[3] = 2,
+		[4] = 2,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()] = {
+		[0] = 0,
+		[1] = 1,
+		[2] = 1,
+		[3] = 2,
+		[4] = 3,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()] = {
+		[0] = 1,
+		[1] = 1,
+		[2] = 2,
+		[3] = 3,
+		[4] = 3,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 1,
+		[3] = 2,
+		[4] = 3,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()] = {
+		[0] = 1,
+		[1] = 1,
+		[2] = 1,
+		[3] = 2,
+		[4] = 2,
+		[5] = 2,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 1,
+		[3] = 2,
+		[4] = 3,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 0,
+		[3] = 1,
+		[4] = 2,
+		[5] = 3,
+	}
+	enemy_whitelist[("units/pd2_dlc_drm/characters/ene_bulldozer_medic/ene_bulldozer_medic"):key()] = {
+		[0] = 0,
+		[1] = 0,
+		[2] = 0,
+		[3] = 1,
+		[4] = 2,
+		[5] = 3,
+	}
+	------ RUSSIA ------
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_heavy_g36/ene_akan_fbi_heavy_g36"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_cs_cop_ak47_ass/ene_akan_cs_cop_ak47_ass"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_medic_ak47_ass/ene_akan_medic_ak47_ass"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_medic_r870/ene_akan_medic_r870"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_cs_tazer_ak47_ass/ene_akan_cs_tazer_ak47_ass"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_shield_dw_sr2_smg/ene_akan_fbi_shield_dw_sr2_smg"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_saiga/ene_akan_fbi_tank_saiga"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_spooc_asval_smg/ene_akan_fbi_spooc_asval_smg"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_r870/ene_akan_fbi_tank_r870"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()])
+	enemy_whitelist[("units/pd2_dlc_mad/characters/ene_akan_fbi_tank_rpk_lmg/ene_akan_fbi_tank_rpk_lmg"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()])
+	------ ZOMBIE ------
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_swat_heavy_hvh_1/ene_swat_heavy_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_swat_hvh_1/ene_swat_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_medic_hvh_m4/ene_medic_hvh_m4"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_medic_hvh_r870/ene_medic_hvh_r870"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_tazer_hvh_1/ene_tazer_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_shield_hvh_1/ene_shield_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_1/ene_bulldozer_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_spook_hvh_1/ene_spook_hvh_1"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_2/ene_bulldozer_hvh_2"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()])
+	enemy_whitelist[("units/pd2_dlc_hvh/characters/ene_bulldozer_hvh_3/ene_bulldozer_hvh_3"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()])
+	------ MURKYWATER ------
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_heavy/ene_murkywater_heavy"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_light/ene_murkywater_light"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_medic/ene_murkywater_medic"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_medic_r870/ene_murkywater_medic_r870"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_tazer/ene_murkywater_tazer"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_shield/ene_murkywater_shield"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_2/ene_murkywater_bulldozer_2"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_cloaker/ene_murkywater_cloaker"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_3/ene_murkywater_bulldozer_3"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_4/ene_murkywater_bulldozer_4"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()])
+	enemy_whitelist[("units/pd2_dlc_bph/characters/ene_murkywater_bulldozer_medic/ene_murkywater_bulldozer_medic"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_drm/characters/ene_bulldozer_medic/ene_bulldozer_medic"):key()])
+	------ FEDERALES ------
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_heavy_policia_federale/ene_swat_heavy_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_heavy/ene_zeal_swat_heavy"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_policia_federale/ene_swat_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat/ene_zeal_swat"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale/ene_swat_medic_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_m4/ene_medic_m4"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_medic_policia_federale_r870/ene_swat_medic_policia_federale_r870"):key()] = deep_clone(enemy_whitelist[("units/payday2/characters/ene_medic_r870/ene_medic_r870"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_tazer_policia_federale/ene_swat_tazer_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_tazer/ene_zeal_tazer"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_shield_policia_federale_mp9/ene_swat_shield_policia_federale_mp9"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_swat_shield/ene_zeal_swat_shield"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_saiga/ene_swat_dozer_policia_federale_saiga"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer/ene_zeal_bulldozer"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_cloaker_policia_federale/ene_swat_cloaker_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_cloaker/ene_zeal_cloaker"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_r870/ene_swat_dozer_policia_federale_r870"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_2/ene_zeal_bulldozer_2"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_dozer_policia_federale_m249/ene_swat_dozer_policia_federale_m249"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_gitgud/characters/ene_zeal_bulldozer_3/ene_zeal_bulldozer_3"):key()])
+	enemy_whitelist[("units/pd2_dlc_bex/characters/ene_swat_dozer_medic_policia_federale/ene_swat_dozer_medic_policia_federale"):key()] = deep_clone(enemy_whitelist[("units/pd2_dlc_drm/characters/ene_bulldozer_medic/ene_bulldozer_medic"):key()])
 	local uni_name = unit:name()
-	if enemy_whitelist[uni_name:key()] and spawn_mul >= enemy_whitelist[uni_name:key()].start and target_enemy_spawns and enemy_count < (target_enemy_spawns * 0.8) then
-		spawn_mul = math.floor(spawn_mul * enemy_whitelist[uni_name:key()].mul)
+	if enemy_whitelist[uni_name:key()] and enemy_whitelist[uni_name:key()][spawn_mul] and target_enemy_spawns and enemy_count <= (target_enemy_spawns * 0.99) then
+		spawn_mul = enemy_whitelist[uni_name:key()][spawn_mul]
 		if spawn_mul >= 1 then
 			for i = 1, spawn_mul do
 				local pos, rot = self:get_orientation()

@@ -4,8 +4,8 @@ if not DS_BW then
     _G.DS_BW = {}
 	DS_BW._path = ModPath
     DS_BW.DS_difficultycheck = false
-	DS_BW.version = "1.5.01" -- this one is used for the welcoming message mainly. if you update DSBW's code to your liking, please update this value to something like "HOMEBREW" :)
-	DS_BW.version_num = 1.5 -- this one is used for comparing to the current save file. only update if the pop up changelog message with important patch info needs to appear
+	DS_BW.version = "1.5.1" -- this one is used for the welcoming message mainly. if you update DSBW's code to your liking, please update this value to something like "HOMEBREW" :)
+	DS_BW.version_num = 1.51 -- this one is used for comparing to the current save file. only update if the pop up changelog message with important patch info needs to appear
 	DS_BW.settings = {
 		-- gameplay
 		always_hard_heists = false,
@@ -56,10 +56,11 @@ if not DS_BW then
 		adjustment_cooldown = -999
 	}
 	DS_BW.kpm_tracker = {
-		update_cooldown = -1,
+		DR_update_cooldown = -1,
 		update_after = -999,
 		kills = {0,0,0,0},
 		kpm = {0,0,0,0},
+		downed_this_update = {false,false,false,false},
 		penalties = {
 			{is_perma = false, amount = 0, was_notified_of = 0},
 			{is_perma = false, amount = 0, was_notified_of = 0},
@@ -67,11 +68,19 @@ if not DS_BW then
 			{is_perma = false, amount = 0, was_notified_of = 0}
 		},
 		thresholds = {
-			[1] = 14,
-			[2] = 22,
-			[3] = 30,
-			[4] = 45,
-			[5] = 60,
+			[1] = 12,
+			[2] = 16,
+			[3] = 24,
+			[4] = 35,
+			[5] = 48,
+		},
+		down_adjustmets_per_lvl = {
+			[0] = 4,
+			[1] = 4,
+			[2] = 5,
+			[3] = 7,
+			[4] = 10,
+			[5] = 14,
 		}
 	}
 	DS_BW.color = Color(255,240,140,35) / 255
@@ -120,7 +129,7 @@ if not DS_BW then
 	function DS_BW.change_lobby_name(is_DS)
 		if managers.network.matchmake._lobby_attributes and managers.network.matchmake.lobby_handler then
 			local cur_name = tostring(managers.network.matchmake._lobby_attributes.owner_name)
-			local new_name = "DS, but Worse"
+			local new_name = "DS, but Worse ("..managers.network.account:username()..")"
 			if not is_DS then
 				new_name = managers.network.account:username()
 			end
@@ -129,6 +138,30 @@ if not DS_BW then
 				managers.network.matchmake.lobby_handler:set_lobby_data(managers.network.matchmake._lobby_attributes)
 			end
 		end
+	end
+	
+	function DS_BW:update_kpm_stats()
+		if Application:time() > DS_BW.kpm_tracker.update_after then
+			if DS_BW.Assault_info and (DS_BW.Assault_info.phase == "build" or DS_BW.Assault_info.phase == "sustain") then
+				DS_BW.kpm_tracker.update_after = Application:time() + 30
+				for i=1,4 do
+					if DS_BW.kpm_tracker.kills[i] > 0 then
+						DS_BW.kpm_tracker.kpm[i] = DS_BW.kpm_tracker.kills[i] * 2
+					else
+						DS_BW.kpm_tracker.kpm[i] = 0
+					end
+					if not DS_BW.kpm_tracker.downed_this_update[i] then
+						DS_BW.kpm_tracker.kills[i] = DS_BW.kpm_tracker.kills[i] + DS_BW.kpm_tracker.down_adjustmets_per_lvl[DS_BW._low_spawns_manager.level] * 0.5
+					end
+				end
+				DS_BW.kpm_tracker.kills = {0,0,0,0}
+				DS_BW.kpm_tracker.downed_this_update = {false,false,false,false}
+			end
+		end
+		DelayedCalls:Add("DS_BW_kpm_updater", 0.05, function()
+			DS_BW.kpm_updating = true
+			DS_BW:update_kpm_stats()
+		end)
 	end
 	
 	function DS_BW:is_hard_heist()
@@ -161,6 +194,7 @@ if not DS_BW then
 			"pines", -- vlad's white xmas
 			"run", -- heat street
 			"man", -- undercover
+			"pal", -- counterfeit, cause its too short
 			"firestarter_3", -- mhm
 			"mad", -- boil point
 			"wwh", -- alaska
@@ -174,6 +208,9 @@ if not DS_BW then
 			"escape_cafe_day",
 			"escape_street",
 			"escape_garage",
+			"chill_combat", -- safe house defense
+			-- custom heists, cause why not
+			"ArmsRace",
 		}
 		
 		if DS_BW.settings.always_hard_heists then
@@ -470,7 +507,7 @@ if not DS_BW then
 				local menu_options = {}
 				menu_options[#menu_options+1] ={text = "Check full changelog", data = nil, callback = DS_BW.linkchangelog}
 				menu_options[#menu_options+1] = {text = "Cancel", is_cancel_button = true}
-				local message = tostring(DS_BW.version).." Changelog:\n\n- Increased enemy respawn rates, but reduced amount of enemies spawned per squad, to allow enemies to spread out across the map better.\n- Updated enemy weapon usage to reduce individual damage from common enemies.\n- Various updates to the ADL system.\n- Sped up first assault waves, especially at ADL level 0.\n- Enemies in the middle of busy animations will no longer interrupt their animations to try to handcuff the player, or to come to a hotspot.\n- Enemy intimidations were fixed and made slightly easier.\n\nAnd even more stuff is in the changelog."
+				local message = tostring(DS_BW.version).." Changelog:\n\nThis patch updates: ADL, ECMs, Handcuffing, Hotspots, Assault pacing, Enemy spawns, and more. Important bits:\n\n- Fixed issues with enemy spawn logic preventing intended spawning quantities\n- Flashbangs can now be replaced with teargas\n- Handcuffing no longer works if only 1 player is left alive\n\nHandcuffing is now applied to Team AI during revives\n\nTo keep yourself up to date, check the changelog."
 				local menu = QuickMenu:new("Death Sentence, but Worse.", message, menu_options)
 				menu:Show()
 				DS_BW.settings.changelog_msg_shown = DS_BW.version_num
@@ -529,7 +566,7 @@ if not DS_BW then
 						DS_BW.players[peer_id].welcome_msg2_shown = true
 						if not DS_BW.peers_with_mod[peer_id] then
 							peer:send("send_chat_message", ChatManager.GAME, "Enemy updates:\n- ECM stun reduced: /ecm\n- Added spawn protection: /spawncamp\n- Intimidations are harder: /dom\n- Gained ability to handcuff players during interactions: /cuffs\n- Updated variety (/cops), behavior (/ai) and damage outputs (/weapons).")
-							peer:send("send_chat_message", ChatManager.GAME, "Other updates:\n- Enemy pressure is adapting to team performance: /adl\n- Flashbangs can create explosions and fire fields: /flash\n- Assault pacing was altered: /assault\n- Swat turrets no longer self-repair :)")
+							peer:send("send_chat_message", ChatManager.GAME, "Other updates:\n- Enemy pressure is adapting to team performance: /adl\n- Flashbangs can create explosions, gas and fire fields: /flash\n- Assault pacing was altered: /assault\n- Swat turrets no longer self-repair :)")
 							peer:send("send_chat_message", ChatManager.GAME, "Use chat commands to get a DM with additional information. Bring your favoutite build and GLHF!")
 							if DS_BW and not MenuCallbackHandler:is_modded_client() then
 								peer:send("send_chat_message", ChatManager.GAME, "Lastly, host ("..managers.network.account:username()..") seems to have a hidden mod list, you can request their modlist using /hostmods.")

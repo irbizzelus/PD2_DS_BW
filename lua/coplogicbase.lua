@@ -192,3 +192,30 @@ Hooks:OverrideFunction(CopLogicBase, "_evaluate_reason_to_surrender", function (
 	
 	return hold_chance < 1 and hold_chance
 end)
+
+-- whenever bots start a revive, trigger cuffing logic
+Hooks:PostHook(CopLogicBase, "add_delayed_clbk", "DSBW_post_CopLogicBase_add_delayed_clbk", function(internal_data, id, clbk, exec_t)
+	
+	if not DS_BW.DS_difficultycheck then
+		return
+	end
+	
+	if Network and Network:is_client() then
+		return
+	end
+	
+	if id and string.sub(id, 1, 22) == "TeamAILogicIdle_revive" and exec_t and exec_t > (TimerManager:game():time() + 1.4) and internal_data.unit and alive(internal_data.unit) then
+		local target_unit = nil
+		for u_key, u_data in pairs(managers.groupai:state()._ai_criminals) do
+			if u_data.unit == internal_data.unit then
+				target_unit = u_data.unit
+			end
+		end
+		if target_unit then
+			DS_BW.CopUtils:SendCopToArrestPlayer(target_unit, "revive")
+			DelayedCalls:Add("DS_BW_delay_for_cuff_scan_on_bot_"..tostring(target_unit), 1.5, function()
+				DS_BW.CopUtils:NearbyCopAutoArrestCheck(target_unit, "bot")
+			end)
+		end
+	end
+end)

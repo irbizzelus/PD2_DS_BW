@@ -1197,23 +1197,23 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 			self.besiege.assault.sustain_duration_min = {
 				60,
 				60,
-				300
+				310
 			}
 			self.besiege.assault.sustain_duration_max = {
 				75,
 				75,
-				310
+				320
 			}
 		else
 			self.besiege.assault.sustain_duration_min = {
 				90,
 				90,
-				270
+				280
 			}
 			self.besiege.assault.sustain_duration_max = {
 				105,
 				105,
-				280
+				290
 			}
 		end
 		
@@ -1258,31 +1258,33 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		
 		-- Max cop amount on the map at the same time, depends on diff
 		self.besiege.assault.force = {
-			20,
-			26,
-			30
+			50,
+			28,
+			28
 		}
 		-- adjusments for it based on the map
 		if Global and Global.level_data then
 		
 			local level_balance_data = {
 				-- boil point
-				mad = 1.24,
+				mad = 1.2,
 				-- rats day 3
-				alex_3 = 1.24,
+				alex_3 = 1.16,
 				-- goat sim day 1
-				peta = 1.29,
+				peta = 1.33,
 				-- mcshay lost in transit
-				trai = 1.14,
+				trai = 1.16,
 				-- birth of sky
-				pbr2 = 1.14,
+				pbr2 = 1.12,
 				-- bomb:forest
-				crojob3 = 1.14,
-				crojob3_night = 1.14,
+				crojob3 = 1.29,
+				crojob3_night = 1.29,
 				-- golden grin
-				kenaz = 1.1,
+				kenaz = 1.08,
 				-- stealing xmas
-				moon = 1.1,
+				moon = 1.05,
+				-- dragon heist
+				chas = 1.05,
 			}
 			
 			local lvl_id = Global.level_data.level_id
@@ -1308,15 +1310,15 @@ Hooks:PostHook(GroupAITweakData, "_init_task_data", "DS_BW_taskdata_override", f
 		-- Total max cop spawns per each assault
 		if Global and Global.level_data and Global.level_data.level_id == "nmh" then
 			self.besiege.assault.force_pool = {
-				40,
-				275,
-				275
+				266,
+				266,
+				266
 			}
 		else
 			self.besiege.assault.force_pool = {
-				40,
-				175,
-				175
+				166,
+				166,
+				166
 			}
 		end
 		
@@ -1458,17 +1460,17 @@ function GroupAITweakData:init_taskdata_spawnRates()
 		},
 		Squad_Grey_Swat = {
 			0,
-			0.12,
+			0.25,
 			0
 		},
 		Squad_Grey_Shield = {
 			0,
-			0.1,
+			0.2,
 			0
 		},
 		Squad_Grey_Tank = {
 			0,
-			0.075,
+			0.15,
 			0
 		},
 		-- zeal
