@@ -43,18 +43,24 @@ Hooks:PostHook(ElementSpawnEnemyDummy, "produce", "DS_BW_spawn_more_shit", funct
 	end
 	
 	local _spawn_enemy = function (grpai, unit_name, pos, rot, og_unit)
-		local unit_done = safe_spawn_unit(unit_name, pos, rot)
-		local team_id = tweak_data.levels:get_default_team_ID(unit_done:base():char_tweak().access == "gangster" and "gangster" or "combatant")
-		unit_done:movement():set_team(grpai:team_data( team_id ))
-		if alive(og_unit) and og_unit:brain() and og_unit:brain()._logic_data.group then
-			grpai:assign_enemy_to_existing_group(unit_done, og_unit:brain()._logic_data.group)
-		else
-			grpai:assign_enemy_to_group_ai(unit_done, team_id)
+		local assign_to_group = "default"
+		if alive(og_unit) and og_unit.brain and og_unit:brain() and og_unit:brain()._logic_data and og_unit:brain()._logic_data.group then
+			assign_to_group = og_unit:brain()._logic_data.group
 		end
-		if unit_done:unit_data() then
-			unit_done:unit_data()._DSBW_unit_spawned_at = Application:time()
-			if og_unit:unit_data().mission_element then
-				unit_done:unit_data().mission_element = og_unit:unit_data().mission_element
+		local unit_done = nil
+		if alive(og_unit) and og_unit.unit_data and og_unit:unit_data() and og_unit:unit_data().mission_element then
+			element_to_asign = og_unit:unit_data().mission_element
+			unit_done = safe_spawn_unit(unit_name, pos, rot)
+			local team_id = tweak_data.levels:get_default_team_ID("combatant")
+			unit_done:movement():set_team(grpai:team_data( team_id ))
+			if assign_to_group == "default" then
+				grpai:assign_enemy_to_group_ai(unit_done, team_id)
+			else
+				grpai:assign_enemy_to_existing_group(unit_done, assign_to_group)
+			end
+			if alive(unit_done) and unit_done.unit_data and unit_done:unit_data() then
+				unit_done:unit_data().mission_element = element_to_asign
+				unit_done:unit_data()._DSBW_unit_spawned_at = Application:time()
 			end
 		end
 		return unit_done
@@ -245,7 +251,7 @@ Hooks:PostHook(ElementSpawnEnemyDummy, "produce", "DS_BW_spawn_more_shit", funct
 							end
 						end
 					end
-					if _unit_objective then
+					if unit_done and _unit_objective then
 						unit_done:brain():set_objective(_unit_objective)
 					end
 					table.insert(self._units, unit_done)

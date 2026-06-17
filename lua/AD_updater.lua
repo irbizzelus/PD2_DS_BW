@@ -395,6 +395,7 @@ function DS_BW:ADU_Update()
 			managers.player[pm_var_name]:show()
 			managers.player[pm_var_name]:set_visible(true)
 		else
+			managers.player[pm_var_name]:set_visible(true)
 			local dir = ADL_update.direction
 			managers.player[pm_var_name]:set_text("ADL - Current: "..tostring(LSM.level)..", Going: "..string.upper(dir).."\n Reason: "..ADL_update.reason.."\n Timer: "..tostring(debug_timer))
 			if dir == "up" then
