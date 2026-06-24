@@ -93,7 +93,7 @@ Hooks:PostHook(CopDamage, "_on_damage_received", "DS_BW_CopDamage_on_damage_rece
 			end
 		end
 		
-		if killer_unit and not CopDamage.is_civilian(self._unit:base()._tweak_table) then
+		if killer_unit and alive(killer_unit) and not CopDamage.is_civilian(self._unit:base()._tweak_table) then
 			local killer_id = killer_unit:id()
 			if not is_killer_teamAI then
 				killer_id = (managers.network:session():peer_by_unit(killer_unit) and managers.network:session():peer_by_unit(killer_unit):id()) or nil
